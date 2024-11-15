@@ -373,7 +373,7 @@ func setupInstallDir(state *InstallerState) error {
 	errors := make([]error, 0)
 
 	link := func(name string, linkSuffix string) {
-		if linkSuffix != "" {
+		if linkSuffix == "" {
 			linkSuffix = name
 		}
 		err := os.Symlink("nix/build/"+linkSuffix, filepath.Join(tempInstallDir, name))
