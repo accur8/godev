@@ -20,6 +20,7 @@ import (
 /*
 TODO ??? handle data directories
 TODO ??? handle data files
+TODO ??? .a8-install directory with build dir and backups dir
 */
 type InstallDescriptor struct {
 	Name               string `json:"name"`
@@ -329,7 +330,7 @@ func backupInstallDir(state *InstallerState) error {
 			return stacktrace.Propagate(err, "Error deleting directory %v", state.Directories.InstallDir)
 		}
 		return nil
-	} else {
+	} else if a8.DirectoryExists(state.InstallDescriptor.InstallDir) {
 		backupRootDir, err := filepath.Abs(state.InstallDescriptor.BackupDir)
 		if !a8.DirectoryExists(backupRootDir) {
 			err := os.MkdirAll(backupRootDir, 0755)
@@ -344,7 +345,7 @@ func backupInstallDir(state *InstallerState) error {
 
 		backupDir := filepath.Join(backupRootDir, backupName)
 
-		if !a8.DirectoryExists(backupDir) {
+		if !a8.DirectoryExists(backupRootDir) {
 			err := os.MkdirAll(backupRootDir, 0755)
 			if err != nil {
 				return stacktrace.Propagate(err, "Error creating root backup directory %v", backupRootDir)
@@ -358,6 +359,8 @@ func backupInstallDir(state *InstallerState) error {
 			return stacktrace.Propagate(err, "Error moving directory: %v - %v", state.Directories.InstallDir, backupDir)
 		}
 		return nil
+	} else {
+		return nil
 	}
 }
 
@@ -369,18 +372,21 @@ func setupInstallDir(state *InstallerState) error {
 
 	errors := make([]error, 0)
 
-	link := func(name string) {
-		err := os.Symlink("nix/build/"+name, filepath.Join(tempInstallDir, name))
+	link := func(name string, linkSuffix string) {
+		if linkSuffix != "" {
+			linkSuffix = name
+		}
+		err := os.Symlink("nix/build/"+linkSuffix, filepath.Join(tempInstallDir, name))
 		if err != nil {
 			errors = append(errors, stacktrace.Propagate(err, "Error creating symlink %v", name))
 		}
 	}
 
-	link("bin")
-	link("lib")
+	link("bin", "")
+	link("lib", "")
 
 	if state.InstallDescriptor.WebappExplode != nil && *state.InstallDescriptor.WebappExplode {
-		link("webapp")
+		link("webapp-composite", "webapp-composite/webapp")
 	}
 
 	if len(errors) > 0 {
@@ -537,13 +543,14 @@ func FetchBuildDescription(state *InstallerState) (*NixBuildDescriptionResponse,
 	}
 
 	requestDto := NixBuildDescriptionRequest{
-		Name:         state.InstallDescriptor.Name,
-		MainClass:    state.InstallDescriptor.MainClass,
-		Organization: state.InstallDescriptor.Organization,
-		Artifact:     state.InstallDescriptor.Artifact,
-		Version:      resolvedVersion,
-		Branch:       state.InstallDescriptor.Branch,
-		JavaVersion:  state.InstallDescriptor.JavaRuntimeVersion,
+		Name:          state.InstallDescriptor.Name,
+		MainClass:     state.InstallDescriptor.MainClass,
+		Organization:  state.InstallDescriptor.Organization,
+		Artifact:      state.InstallDescriptor.Artifact,
+		Version:       resolvedVersion,
+		Branch:        state.InstallDescriptor.Branch,
+		JavaVersion:   state.InstallDescriptor.JavaRuntimeVersion,
+		WebappExplode: state.InstallDescriptor.WebappExplode,
 	}
 
 	apiUrl := state.Repository.RootUrl + "/api/nixBuildDescription"
