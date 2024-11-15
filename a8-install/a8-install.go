@@ -17,6 +17,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+/*
+TODO ??? handle data directories
+TODO ??? handle data files
+*/
 type InstallDescriptor struct {
 	Name               string `json:"name"`
 	Organization       string `json:"organization"`
@@ -327,6 +331,12 @@ func backupInstallDir(state *InstallerState) error {
 		return nil
 	} else {
 		backupRootDir, err := filepath.Abs(state.InstallDescriptor.BackupDir)
+		if !a8.DirectoryExists(backupRootDir) {
+			err := os.MkdirAll(backupRootDir, 0755)
+			if err != nil {
+				return stacktrace.Propagate(err, "Error creating root backup directory %v", backupRootDir)
+			}
+		}
 		if err != nil {
 			return stacktrace.Propagate(err, "will not backup, Invalid backup directory %v", state.InstallDescriptor.BackupDir)
 		}
