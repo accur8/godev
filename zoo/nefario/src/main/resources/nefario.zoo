@@ -1,0 +1,31 @@
+
+@qubeDatabase(name=nefario)
+@dataDatabase(name=nefario, description="Nefario")
+
+@scalaModel(packageName='a8.nefario.model')
+
+@config("""
+{
+    scalaCaseClasses: {
+      outputFile: "src/main/scala/a8/nefario/model/Model.scala",
+      generateMapperCompanion: true,
+      scalaCodeGenerator: "sync",
+    }
+    qubes: {
+        externalMaintainer="nefario.zoo"
+    }
+    createTables: {
+        database="nefario.database",
+        schema="nefario",
+    }
+}
+""")
+
+
+
+import CommonFields {
+    //visible             Visible;
+    extraConfig         ExtraConfig;
+    audit_version       long @readonly @nullable { ~scala { @default(None) }};
+    audit_userGroupUid  UserUid @readonly @nullable;
+}

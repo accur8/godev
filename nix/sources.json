@@ -1,0 +1,50 @@
+{
+    "a8-scripts": {
+        "branch": "master",
+        "description": null,
+        "homepage": null,
+        "owner": "fizzy33",
+        "repo": "a8-scripts",
+        "rev": "dfe18430ec55ec9dd9cf309c7cf8e50f07065542",
+        "sha256": "0qbgm0d04i3qf1k5zsw74zk0z7lx6zlnhd4fz5g47wzz1z03cac2",
+        "type": "tarball",
+        "url": "https://github.com/fizzy33/a8-scripts/archive/dfe18430ec55ec9dd9cf309c7cf8e50f07065542.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "devshell": {
+        "branch": "main",
+        "description": "Per project developer environments",
+        "homepage": "https://numtide.github.io/devshell/",
+        "owner": "numtide",
+        "repo": "devshell",
+        "rev": "83cb93d6d063ad290beee669f4badf9914cc16ec",
+        "sha256": "0h586bvgc34db6apkj0216by59j5kaj3c2dz3fm8pm4yz4n4caji",
+        "type": "tarball",
+        "url": "https://github.com/numtide/devshell/archive/83cb93d6d063ad290beee669f4badf9914cc16ec.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "gomod2nix": {
+        "branch": "master",
+        "description": "Convert applications using Go modules to Nix expressions [maintainer=@adisbladis]",
+        "homepage": "",
+        "owner": "nix-community",
+        "repo": "gomod2nix",
+        "rev": "30e3c3a9ec4ac8453282ca7f67fca9e1da12c3e6",
+        "sha256": "1m0q0p1xidsp61xfrbj8ld1dqk3fhyrfifxj2ks36yjbnzmi1x69",
+        "type": "tarball",
+        "url": "https://github.com/nix-community/gomod2nix/archive/30e3c3a9ec4ac8453282ca7f67fca9e1da12c3e6.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "nixpkgs": {
+        "branch": "nixos-unstable",
+        "description": "Nix Packages collection",
+        "homepage": "",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "9b19f5e77dd906cb52dade0b7bd280339d2a1f3d",
+        "sha256": "0939vbhln9d33xkqw63nsk908k03fxihj85zaf70i3il9z42q8mc",
+        "type": "tarball",
+        "url": "https://github.com/NixOS/nixpkgs/archive/9b19f5e77dd906cb52dade0b7bd280339d2a1f3d.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    }
+}

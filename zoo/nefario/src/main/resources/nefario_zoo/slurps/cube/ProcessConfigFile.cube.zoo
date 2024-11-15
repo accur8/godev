@@ -1,0 +1,19 @@
+
+
+composite ProcessConfigFile {
+
+@sqltable(auditlog=true)
+
+@scalaCaseClassMixin(value="ModelMixins.ProcessConfigFileMixin")
+
+@scalaCompanionMixin(value="CompanionMixins.ProcessConfigFileMixin")
+
+uid              Uid @key @required @field(extraConfig = """{"insertable":true,"autoGenerator":{"length":32,"type":"uid"}}""");
+processDefUid    ProcessDef @required @fetch(processDef);
+filename         text @required;
+content          text @required @field(extraConfig = """{"widgetHint":"textarea"}""");
+audit_version    long @nullable @readonly { ~scala { @default(None) }};
+extraConfig      ExtraConfig @nullable;
+audit_userGroupUid  UserUid @nullable @readonly;
+
+}

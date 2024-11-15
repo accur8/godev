@@ -1,0 +1,7 @@
+@Validation(
+    name = requireActivatedUserForAllNefarioActions,
+    actions = [delete,insert,read,update],
+    expr = """validation(message = "User has not been activated.") { queryvar.currentuser.isActivated }""",
+    appSpace = nefario,
+    allCubes = true
+)

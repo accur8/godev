@@ -1,0 +1,32 @@
+listener:
+  slotName: testslot_deleteme
+  refreshConnection: 30s
+  heartbeatInterval: 10s
+logger:
+  level: info
+  fmt: json
+database:
+  host: tulip.accur8.net
+  port: 5432
+  name: qubes_nefario
+  user: qubes_nefario_owner
+  password: gJsK5evKyhZ2fnaS8bfe
+  debug: false
+publisher:
+   type: nats
+   address: nats://localhost:4222
+#   address: nats://4yXpjEBeTbXGtEjVrxvfa:o7oHnCGqLH7ri4jVMXr9@ahs-hermes.emu-dojo.ts.net:4222
+   topic: "wal_listener"
+   topicPrefix: ""
+monitoring:
+  sentryDSN: ""
+  promAddr: ":2112"
+filter:
+  tables:
+    accesslog:
+      - insert
+      - update
+    querystats:
+      - insert
+      - update
+

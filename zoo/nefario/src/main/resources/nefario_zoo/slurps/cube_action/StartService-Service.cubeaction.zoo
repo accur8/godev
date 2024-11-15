@@ -1,0 +1,24 @@
+@cubeaction(
+    name = StartService,
+    cube = Service,
+    javascript = """function(a, b, c, ctx){
+    const mailbox = ctx.valueOfField("MinionProcess.mailbox");
+    const serviceName = ctx.valueOfField("name");
+    var request = $.ajax({
+      url: "https://hermes-go.ahsrcm.com/api/rpc_call",
+      method: "POST",
+      data: JSON.stringify({ "toMailbox" : mailbox, endPoint:"SystemdServiceAction", requestBody:{serviceName: serviceName, action: "Start"}, timeoutInMillis:5000 }),
+      dataType: "json",
+      success: function(data, textStatus, jqXHR) {
+        m3.util.JqueryUtil.alert("Start Responded - " + JSON.stringify(data));
+        embi.App.reloadPageViews();
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+		m3.util.JqueryUtil.error("Start Error:<br/> " + errorThrown);
+	  }
+    });
+}""",
+    extraConfig = """{
+  "supportsMultiselect":false
+}"""
+)

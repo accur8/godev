@@ -1,0 +1,70 @@
+
+
+== grpc server ==
+
+* implement grpc shutdown
+
+
+== rpc client ==
+
+* auto reconnect
+
+
+
+== release build ==
+
+* embed version info in exec
+
+
+
+
+== clients ==
+
+ * typescript
+    * support reconnects
+        * ack send message requests
+    * incremental backoff
+* java
+    * incremental backoff
+    * websocket and grpc
+* scala 
+    * incremental backoff
+    * kinds
+        * nats direct
+        * websocket
+* go lang
+
+
+
+* general client features
+    * send message requests are ack'ed
+    * on reconnect send un'ack'ed SendMessageRequest(s)
+    * on timeout after no ping/pong trigger reconnect
+
+
+
+* hardening use cases
+    * hermes server down on startup
+    * hermes server restarted while running
+
+
+
+ == locus api's ==
+
+ curl -v -X POST 'https://locus.accur8.net/api/nixBuildDescription' --data '{
+    "name": "bob",
+    "mainClass": "a.b.c.Bob",
+    "organization": "ahs",
+    "artifact": "ahs-qubes-runner_2.13",
+    "version": "2.7.1-20240909_1547_master",
+    "javaVersion": "11"
+}'
+
+{
+  "kind": "jvm_cli",
+  "mainClass": "a8.codegen.Codegen",
+  "organization": "io.accur8",
+  "artifact": "a8-codegen_2.13",
+  "branch": "master",
+  "repo": "repo"
+}

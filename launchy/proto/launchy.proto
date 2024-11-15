@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+
+package launchy_proto;
+option go_package = "accur8.io/launchy_proto";
+
+
+message RestartProcessRequest {
+    StopSignal  signal = 1;
+}
+message RestartProcessResponse {
+}
+
+
+enum StopSignal {
+    UnspecifiedSS = 0;
+    Interupt      = 1;
+    Kill          = 2;
+}
+
+
+message StopProcessRequest {
+    StopSignal  signal = 1;
+}
+message StopProcessResponse {
+}
+
+
+message ProcessStatusRequest {
+}
+message ProcessStatusResponse {
+    string  state  = 1;
+}
+
+
+enum ProcessState {
+    UnspecifiedPS = 0;
+    Starting      = 1;
+    Running       = 2;
+    Stopping      = 3;
+    Stopped       = 4;
+}
+
+
+message StartProcessRequest {
+}
+message StartProcessResponse {
+}
+
+
+message StopLaunchyRequest {
+    // signal to use to stop the process/command if it is running
+    StopSignal  stopCommandSignal = 1;
+}
+message StopLaunchyResponse {
+}
+
+
+message PingRequest {
+}
+message PingResponse {
+}
+
+
+message ListSystemdServicesRequest {
+}
+
+message ListSystemdServicesResponse {
+    repeated  SystemdUnitInfo  services  = 1;
+    string    errorMessage               = 2;
+    string    errorOutput                = 3;
+}
+
+message SystemdUnitInfo {
+  string     unit          = 1;
+  string     load          = 2;
+  string     active        = 3;
+  string     sub           = 4;
+  string     description   = 5;
+}
+
+message SystemdServiceActionRequest {
+    string         serviceName      = 1;
+    SystemdAction  action           = 2;
+}
+
+message SystemdServiceActionResponse {
+    string   commandOutput    = 1;
+    string   errorMessage     = 2;
+}
+
+enum SystemdAction {
+    UnspecifiedSA = 0;
+    Stop          = 1;
+    Start         = 2;
+    Restart       = 3;
+    Cat           = 4;
+    Status        = 5;
+ }
+

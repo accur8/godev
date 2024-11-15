@@ -1,0 +1,4 @@
+@qubemenu(
+    name = Nefario,
+    visible = true
+)

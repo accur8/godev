@@ -1,0 +1,12 @@
+@cubeaction(
+    name = LogsDownload,
+    cube = Service,
+    label = "Download Logs",
+    javascript = """function(a, b, c, ctx) {
+    var processUid = ctx.valueOfField("MostRecentProcessRunUid");
+    window.open(`https://hermes-go.ahsrcm.com/api/stream_download/` + processUid + `/stdout`,'_blank');
+}""",
+    extraConfig = """{
+  "supportsMultiselect":false
+}"""
+)

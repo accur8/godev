@@ -1,0 +1,215 @@
+
+// start 
+//    SYSLOG_IDENTIFIER = "systemd"
+//    JOB_TYPE = "start"
+//    JOB_RESULT = "done"
+
+{
+    "__CURSOR": "s=80d7b47b98c54432848f346275a62f60;i=3fa6b17;b=21012b9640f0418093029d4d2b33d56e;m=1ff45650e385;t=620fe43460201;x=bf347d28d40e843e",
+    "__REALTIME_TIMESTAMP": "1725126282707457",
+    "__MONOTONIC_TIMESTAMP": "35134280622981",
+    "_BOOT_ID": "21012b9640f0418093029d4d2b33d56e",
+    "PRIORITY": "6",
+    "_UID": "2001",
+    "_GID": "2001",
+    "_CAP_EFFECTIVE": "0",
+    "_SELINUX_CONTEXT": "unconfined\n",
+    "_AUDIT_LOGINUID": "2001",
+    "_SYSTEMD_OWNER_UID": "2001",
+    "_SYSTEMD_SLICE": "user-2001.slice",
+    "_SYSTEMD_USER_SLICE": "-.slice",
+    "_MACHINE_ID": "ec21c80081442df941c82c5b0f29411e",
+    "_HOSTNAME": "hermes",
+    "SYSLOG_FACILITY": "3",
+    "SYSLOG_IDENTIFIER": "systemd",
+    "_TRANSPORT": "journal",
+    "_PID": "1483",
+    "_COMM": "systemd",
+    "_EXE": "/lib/systemd/systemd",
+    "_CMDLINE": "/lib/systemd/systemd --user",
+    "_AUDIT_SESSION": "223957",
+    "_SYSTEMD_CGROUP": "/user.slice/user-2001.slice/user@2001.service/init.scope",
+    "_SYSTEMD_UNIT": "user@2001.service",
+    "_SYSTEMD_USER_UNIT": "init.scope",
+    "_SYSTEMD_INVOCATION_ID": "7bfa5f5d72334aa09ce32f78ea0ad780",
+    "CODE_FILE": "../src/core/job.c",
+    "CODE_LINE": "845",
+    "CODE_FUNC": "job_log_status_message",
+    "MESSAGE": "Started noop.",
+    "JOB_TYPE": "start",
+    "JOB_RESULT": "done",
+    "USER_UNIT": "noop.service",
+    "MESSAGE_ID": "39f53479d3a045ac8e11786248231fbf",
+    "USER_INVOCATION_ID": "aafe918acb674d68b3e04b7e8921e667",
+    "_SOURCE_REALTIME_TIMESTAMP": "1725126282707441"
+  }
+
+// app stopped running
+//    SYSLOG_IDENTIFIER = "systemd"
+//    CODE_FUNC = unit_log_resources
+//    MESSAGE starts with "noop.service: Consumed "
+//    MESSAGE ends with " CPU time."
+{
+  "CODE_FUNC": "unit_log_resources",
+  "SYSLOG_FACILITY": "3",
+  "_BOOT_ID": "635bbee6b4c840e8951434c2ec7cdf97",
+  "_CMDLINE": "/lib/systemd/systemd --user",
+  "_CAP_EFFECTIVE": "0",
+  "_HOSTNAME": "tulip",
+  "_TRANSPORT": "journal",
+  "_SYSTEMD_SLICE": "user-1000.slice",
+  "TID": "891",
+  "_AUDIT_SESSION": "2",
+  "MESSAGE": "noop.service: Consumed 21.278s CPU time.",
+  "__CURSOR": "s=c554d75a88c94df79ac6b37f07a0d078;i=1af663cc;b=635bbee6b4c840e8951434c2ec7cdf97;m=a7c6577a2f2;t=6213e367a732f;x=bb89cc59c99c4927",
+  "_GID": "1000",
+  "_SYSTEMD_USER_SLICE": "-.slice",
+  "_SYSTEMD_USER_UNIT": "init.scope",
+  "_SYSTEMD_OWNER_UID": "1000",
+  "_SOURCE_REALTIME_TIMESTAMP": "1725400945947412",
+  "_COMM": "systemd",
+  "__REALTIME_TIMESTAMP": "1725400945947439",
+  "PRIORITY": "6",
+  "MESSAGE_ID": "ae8f7b866b0347b9af31fe1c80b127c0",
+  "_SYSTEMD_UNIT": "user@1000.service",
+  "_EXE": "/usr/lib/systemd/systemd",
+  "_UID": "1000",
+  "_MACHINE_ID": "482964e94cc44b749a7afe79415ba5c7",
+  "_SELINUX_CONTEXT": "unconfined\n",
+  "_PID": "891",
+  "_AUDIT_LOGINUID": "1000",
+  "USER_UNIT": "noop.service",
+  "__MONOTONIC_TIMESTAMP": "11529394561778",
+  "CODE_LINE": "2474",
+  "CODE_FILE": "src/core/unit.c",
+  "CPU_USAGE_NSEC": "21278407000",
+  "_SYSTEMD_CGROUP": "/user.slice/user-1000.slice/user@1000.service/init.scope",
+  "SYSLOG_IDENTIFIER": "systemd",
+  "USER_INVOCATION_ID": "d605b868451542989945660e633c6c9c"
+}
+
+// app stdout | stderr
+//     SYSLOG_IDENTIFIER != "systemd"
+//     _TRANSPORT = "stdout" | "stderr"
+
+{
+    "__CURSOR": "s=80d7b47b98c54432848f346275a62f60;i=3fa695a;b=21012b9640f0418093029d4d2b33d56e;m=1ff414c81b57;t=620fe01bd39d2;x=715c77253a242e31",
+    "__REALTIME_TIMESTAMP": "1725125183224274",
+    "__MONOTONIC_TIMESTAMP": "35133181139799",
+    "_BOOT_ID": "21012b9640f0418093029d4d2b33d56e",
+    "PRIORITY": "6",
+    "_UID": "2001",
+    "_GID": "2001",
+    "_CAP_EFFECTIVE": "0",
+    "_SELINUX_CONTEXT": "unconfined\n",
+    "_AUDIT_LOGINUID": "2001",
+    "_SYSTEMD_OWNER_UID": "2001",
+    "_SYSTEMD_SLICE": "user-2001.slice",
+    "_SYSTEMD_USER_SLICE": "-.slice",
+    "_MACHINE_ID": "ec21c80081442df941c82c5b0f29411e",
+    "_HOSTNAME": "hermes",
+    "SYSLOG_FACILITY": "3",
+    "_AUDIT_SESSION": "223957",
+    "_SYSTEMD_UNIT": "user@2001.service",
+    "_SYSTEMD_INVOCATION_ID": "7bfa5f5d72334aa09ce32f78ea0ad780",
+    "_TRANSPORT": "stdout",
+    "SYSLOG_IDENTIFIER": "python3",
+    "_COMM": "python3",
+    "_EXE": "/usr/bin/python3.6",
+    "_CMDLINE": "/usr/bin/python3 /home/glen/.config/systemd/user/noop.py",
+    "_SYSTEMD_CGROUP": "/user.slice/user-2001.slice/user@2001.service/noop.service",
+    "_SYSTEMD_USER_UNIT": "noop.service",
+    "_STREAM_ID": "c817cb1021f3417b89ef3038813eeb34",
+    "_PID": "2854",
+    "MESSAGE": "2024-08-31 13:26:23"
+}
+
+// stopping
+//    SYSLOG_IDENTIFIER = "systemd"
+//    CODE_FUNC = "unit_status_log_starting_stopping_reloading"
+//    MESSAGE starts with Stopping
+//    no JOB_TYPE
+//  note: we currently just log these
+{
+    "__CURSOR": "s=80d7b47b98c54432848f346275a62f60;i=3fa695c;b=21012b9640f0418093029d4d2b33d56e;m=1ff414d161a4;t=620fe01c68020;x=b36f8374f435ce0e",
+    "__REALTIME_TIMESTAMP": "1725125183832096",
+    "__MONOTONIC_TIMESTAMP": "35133181747620",
+    "_BOOT_ID": "21012b9640f0418093029d4d2b33d56e",
+    "PRIORITY": "6",
+    "_UID": "2001",
+    "_GID": "2001",
+    "_CAP_EFFECTIVE": "0",
+    "_SELINUX_CONTEXT": "unconfined\n",
+    "_AUDIT_LOGINUID": "2001",
+    "_SYSTEMD_OWNER_UID": "2001",
+    "_SYSTEMD_SLICE": "user-2001.slice",
+    "_SYSTEMD_USER_SLICE": "-.slice",
+    "_MACHINE_ID": "ec21c80081442df941c82c5b0f29411e",
+    "_HOSTNAME": "hermes",
+    "SYSLOG_FACILITY": "3",
+    "SYSLOG_IDENTIFIER": "systemd",
+    "_TRANSPORT": "journal",
+    "_PID": "1483",
+    "_COMM": "systemd",
+    "_EXE": "/lib/systemd/systemd",
+    "_CMDLINE": "/lib/systemd/systemd --user",
+    "_AUDIT_SESSION": "223957",
+    "_SYSTEMD_CGROUP": "/user.slice/user-2001.slice/user@2001.service/init.scope",
+    "_SYSTEMD_UNIT": "user@2001.service",
+    "_SYSTEMD_USER_UNIT": "init.scope",
+    "_SYSTEMD_INVOCATION_ID": "7bfa5f5d72334aa09ce32f78ea0ad780",
+    "USER_UNIT": "noop.service",
+    "CODE_FILE": "../src/core/unit.c",
+    "CODE_LINE": "1726",
+    "CODE_FUNC": "unit_status_log_starting_stopping_reloading",
+    "MESSAGE": "Stopping noop...",
+    "MESSAGE_ID": "de5b426a63be47a7b6ac3eaac82e2f6f",
+    "USER_INVOCATION_ID": "e6ddcf6349b84fdaab5143240b43ea19",
+    "_SOURCE_REALTIME_TIMESTAMP": "1725125183832079"
+  }
+
+// stopped
+//    SYSLOG_IDENTIFIER = "systemd"
+//    CODE_FUNC = "unit_status_log_starting_stopping_reloading"
+//    JOB_TYPE = "stop"
+//    JOB_RESULT = "done"
+
+  {
+    "__CURSOR": "s=80d7b47b98c54432848f346275a62f60;i=3fa695d;b=21012b9640f0418093029d4d2b33d56e;m=1ff414d16495;t=620fe01c68310;x=c899bc684d934f5",
+    "__REALTIME_TIMESTAMP": "1725125183832848",
+    "__MONOTONIC_TIMESTAMP": "35133181748373",
+    "_BOOT_ID": "21012b9640f0418093029d4d2b33d56e",
+    "PRIORITY": "6",
+    "_UID": "2001",
+    "_GID": "2001",
+    "_CAP_EFFECTIVE": "0",
+    "_SELINUX_CONTEXT": "unconfined\n",
+    "_AUDIT_LOGINUID": "2001",
+    "_SYSTEMD_OWNER_UID": "2001",
+    "_SYSTEMD_SLICE": "user-2001.slice",
+    "_SYSTEMD_USER_SLICE": "-.slice",
+    "_MACHINE_ID": "ec21c80081442df941c82c5b0f29411e",
+    "_HOSTNAME": "hermes",
+    "SYSLOG_FACILITY": "3",
+    "SYSLOG_IDENTIFIER": "systemd",
+    "_TRANSPORT": "journal",
+    "_PID": "1483",
+    "_COMM": "systemd",
+    "_EXE": "/lib/systemd/systemd",
+    "_CMDLINE": "/lib/systemd/systemd --user",
+    "_AUDIT_SESSION": "223957",
+    "_SYSTEMD_CGROUP": "/user.slice/user-2001.slice/user@2001.service/init.scope",
+    "_SYSTEMD_UNIT": "user@2001.service",
+    "_SYSTEMD_USER_UNIT": "init.scope",
+    "_SYSTEMD_INVOCATION_ID": "7bfa5f5d72334aa09ce32f78ea0ad780",
+    "CODE_FILE": "../src/core/job.c",
+    "CODE_LINE": "845",
+    "CODE_FUNC": "job_log_status_message",
+    "JOB_RESULT": "done",
+    "USER_UNIT": "noop.service",
+    "MESSAGE": "Stopped noop.",
+    "MESSAGE_ID": "9d1aaa27d60140bd96365438aad20286",
+    "JOB_TYPE": "stop",
+    "USER_INVOCATION_ID": "e6ddcf6349b84fdaab5143240b43ea19",
+    "_SOURCE_REALTIME_TIMESTAMP": "1725125183832841"
+  }

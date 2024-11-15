@@ -1,0 +1,27 @@
+
+primitive jsonb {
+
+/*
+@qubeDataType(
+    name = jsonb,
+    typeConverter = jsonb,
+    style = alignLeft,
+    extraConfig = """{
+  "validations":[
+    "m3.forms.FormValidations.json"
+  ]
+}"""
+)
+*/
+
+@qubeField(
+    dataType = Json
+)
+
+    ~sql { 
+        ~postgres { jsonb @nullable @default("'{}'") } 
+        ~h2 { varchar(2147483647) @nullable }
+        ~haxe { Dynamic }
+        ~scala { JsDoc @default("JsDoc.empty") }
+    }
+}

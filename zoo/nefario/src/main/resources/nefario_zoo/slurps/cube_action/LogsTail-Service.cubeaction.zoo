@@ -1,0 +1,12 @@
+@cubeaction(
+    name = LogsTail,
+    cube = Service,
+    label = "Tail Logs",
+    javascript = """function(a, b, c, ctx) {
+    var processUid = ctx.valueOfField("MostRecentProcessRunUid");
+    window.open(`https://hermes-go.ahsrcm.com/api/stream_tail/` + processUid + `/stdout`,'_blank');
+}""",
+    extraConfig = """{
+  "supportsMultiselect":false
+}"""
+)

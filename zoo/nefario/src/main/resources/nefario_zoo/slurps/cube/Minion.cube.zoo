@@ -1,0 +1,23 @@
+
+
+composite Minion {
+
+@sqltable(auditlog=true)
+
+@scalaCaseClassMixin(value="ModelMixins.UserLogin")
+
+@scalaCompanionMixin(value="CompanionMixins.UserLogin")
+
+uid               Uid @key @required @field(extraConfig = """{"insertable":true,"autoGenerator":{"length":32,"type":"uid"}}""");
+
+serverUid         Server @required @fetch(server);
+
+userLogin         varchar(255) @required;
+userUid           int32;
+mostRecentProcessRunUid  ProcessRun @nullable @fetch(mostRecentProcessRun);
+description       text @required;
+extraConfig       ExtraConfig @nullable;
+audit_version     long @nullable @readonly { ~scala { @default(None) }};
+audit_userGroupUid  UserUid @nullable @readonly;
+
+}

@@ -1,0 +1,5 @@
+@appspace(
+    name=nefario,
+    description="Nefario",
+    defaultAppSpace = true
+)

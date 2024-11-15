@@ -1,0 +1,16 @@
+{
+    "package": "model",
+    "outputFile": "model-opaques.go",
+    "opaqueStrings": [
+        "ChannelName",
+        "AdminKey",
+        "MailboxAddress",
+        "ReaderKey",
+        "IdempotentId",
+        "CorrelationId",
+        "ProcessUid",
+        "NatsSubject",
+        "NatsStreamName",
+        "NatsConsumerName"
+    ]
+}

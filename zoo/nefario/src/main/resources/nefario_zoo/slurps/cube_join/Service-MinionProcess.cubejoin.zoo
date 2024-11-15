@@ -1,0 +1,6 @@
+@cubejoin(
+    name = MinionProcess,
+    toCube = ProcessRun,
+    fromCube = Service,
+    joinExpr = "from.ProcessRun.parentprocessrunuid = to.uid"
+)

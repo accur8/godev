@@ -1,0 +1,10 @@
+{
+    "name": "a8-codegen",
+    "mainClass": "a8.codegen.Codegen",
+    "organization": "io.accur8",
+    "artifact": "a8-codegen_2.13",
+    "branch": "master",
+    "installDir": "/Users/glen/code/accur8/godev/sandbox/codegen",
+    "backupDir": "/Users/glen/code/accur8/godev/sandbox/backups"
+}
+

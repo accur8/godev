@@ -1,0 +1,20 @@
+
+
+composite Server {
+
+@sqltable(auditlog=true)
+
+@scalaCaseClassMixin(value="ModelMixins.ServerMixin")
+
+@scalaCompanionMixin(value="CompanionMixins.ServerMixin")
+
+uid              Uid @key @required @field(extraConfig = """{"insertable":true,"autoGenerator":{"length":32,"type":"uid"}}""");
+name             text @required;
+description      text @required;
+vpnDomainName    varchar(255) @required;
+natsUrl          varchar(255) @required;
+extraConfig      ExtraConfig @nullable;
+audit_version    long @nullable @readonly { ~scala { @default(None) }};
+audit_userGroupUid  UserUid @nullable @readonly;
+
+}

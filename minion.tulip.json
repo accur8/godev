@@ -1,0 +1,10 @@
+{
+    "minionUid": "ccYZCNN32tZxIMOPNDzqksKDVXX8P6Qr",
+    "localNatsUrl": "nats://4yXpjEBeTbXGtEjVrxvfa:o7oHnCGqLH7ri4jVMXr9@tulip.accur8.net:4222",
+    "centralNatsUrl": "nats://4yXpjEBeTbXGtEjVrxvfa:o7oHnCGqLH7ri4jVMXr9@ahs-hermes.accur8.net:4222",
+    "RemoteLinuxCommandPrefix": [
+        "ssh",
+        "dev@tulip",
+        "--"
+    ]
+}

@@ -1,0 +1,6 @@
+@cubejoin(
+    name = ProcessRun,
+    toCube = ProcessRun,
+    fromCube = Service,
+    joinExpr = "from.mostrecentprocessrunuid = to.uid"
+)

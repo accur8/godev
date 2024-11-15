@@ -1,0 +1,4 @@
+@appSpaceCube(
+    appSpace = nefario,
+    cube = ProcessConfigFile
+)

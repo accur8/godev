@@ -1,0 +1,6 @@
+{
+    "natsUrl": "nats://127.0.0.1:4222",
+    "httpListenAddress": ":8080",
+    "grpcListenAddress": ":8081",
+    "databaseUrl": "postgresql://user:password@tulip.accur8.net:5432/qubes_nefario"
+}

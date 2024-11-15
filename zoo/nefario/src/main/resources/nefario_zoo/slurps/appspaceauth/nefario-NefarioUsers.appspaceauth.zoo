@@ -1,0 +1,4 @@
+@AppSpaceAuth(
+    appSpace = nefario,
+    group = NefarioUsers
+)

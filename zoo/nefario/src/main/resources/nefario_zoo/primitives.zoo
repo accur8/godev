@@ -1,0 +1,102 @@
+
+primitive long {
+  @useQubesDataType(number)
+  ~sql { bigint }
+  ~scala { Long }
+}
+
+primitive int32 {
+  @useQubesDataType(number)
+  ~sql { int }
+  ~scala { Int }
+}
+
+primitive text {
+  @useQubesDataType(text)
+  ~scala { String }
+}
+
+primitive timestamp {
+  @useQubesDataType(timestamp)
+  ~scala { LocalDateTime }
+}
+
+primitive varchar(_) {
+  @useQubesDataType(text)
+  ~scala { String }
+}
+
+primitive Bool {
+  @useQubesDataType(Bool)
+  ~sql { ~postgres { boolean } }
+  ~scala { Boolean }
+}
+
+primitive Json {
+  @useQubesDataType(Json)
+  ~sql { ~postgres { jsonb } }
+  ~scala { JsDoc }
+}
+
+primitive Name {
+  @useQubesDataType(text)
+  ~sql { varchar(50) }
+  ~scala { String }
+}
+
+primitive UserUid {
+  @useQubesDataType(text)
+  ~sql { varchar(32) }
+  ~scala { UserUid }
+}
+
+primitive Uid {
+  @qubeField(extraConfig='''{"autoGenerator":{"type":"uid", length=32}}''')
+  ~sql { varchar(32) }
+  ~scala { Uid }
+}
+
+primitive Sql {
+  @useQubesDataType(Sql)
+  ~sql { text }
+  ~scala { String }
+}
+
+primitive ExtraConfig {
+  @qubeDataType(style=alignLeft, typeConverter=jsonb, extraConfig='''{"validations":["m3.forms.FormValidations.json"]}''')
+  ~sql {
+    @qubeField(dataType=Json)
+    ~postgres { jsonb @nullable @default("""'{}'""")}
+    ~h2 { varchar(2147483647) @nullable }
+  }
+  ~haxe { Dynamic }
+  ~scala { JsDoc @default('JsDoc.empty') }
+}
+
+primitive PublicMailboxId {
+  @useQubesDataType(text)
+  ~sql {
+    ~postgres { text }
+  }
+  ~scala { PublicMailboxId }
+}
+
+primitive PrivateMailboxId {
+  @useQubesDataType(text)
+  ~sql {
+    ~postgres { text }
+  }
+  ~scala { PrivateMailboxId }
+}
+
+
+primitive jsonb {
+  @qubeDataType(style=alignLeft, typeConverter=jsonb, extraConfig='''{"validations":["m3.forms.FormValidations.json"]}''')
+  ~sql {
+    @qubeField(dataType=Json)
+    ~postgres { jsonb @nullable @default("""'{}'""")}
+    ~h2 { varchar(2147483647) @nullable }
+  }
+  ~haxe { Dynamic }
+  ~scala { JsDoc @default('JsDoc.empty') }
+}

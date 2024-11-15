@@ -1,0 +1,119 @@
+
+
+composite ProcessRun {
+
+@sqltable()
+
+@scalaCaseClassMixin(value="ModelMixins.ProcessRunMixin")
+
+@scalaCompanionMixin(value="CompanionMixins.ProcessRunMixin")
+
+@field(
+    name = Exec,
+    dataType = text,
+    modelExpr = """array_to_string(
+    regexp_match(
+        qualifiedexec, 
+        '[^/]+$'
+    ),
+    ''
+)"""
+)
+
+@field(
+    name = QualifiedExec,
+    dataType = text,
+    label = "Exec (Qualified)",
+    modelExpr = "json_str(json_path(processstart, '{command,0}'))"
+)
+
+@field(
+    name = childStatus,
+    dataType = text,
+    modelExpr = """(case 
+    when isRunning = false then 'Stopped'
+    when parentProcessRunUid <> '' and parentProcessRunUid is not null then null
+    when mostRecentChildUid is null then 'Child Stopped'
+    when most_recent_child.isRunning then 'Child Running'
+    when most_recent_child.isRunning = false then 'Child Stopped'
+    else 'This should not happen'
+end)"""
+)
+
+@field(
+    name = childStatusErr,
+    dataType = text,
+    label = "Child Status (w/error)",
+    modelExpr = """(case 
+    when not isRunning = false then 'Stopped'
+    when parentProcessRunUid <> '' and parentProcessRunUid is not null then null
+    when mostRecentChildUid is null then 'Child Stopped'
+    when most_recent_child.isRunning then 'Child Running'
+    when most_recent_child.isRunning = false then 'Child Stopped'
+    else 'This should not happen'
+end)"""
+)
+
+@field(
+    name = IsLaunchy,
+    dataType = Bool,
+    label = "Is a Launchy Process",
+    modelExpr = "parentProcessRunUid is null"
+)
+
+@field(
+    name = isRunning,
+    dataType = Bool,
+    modelExpr = """(
+    completedAt is null 
+        and (processComplete is null or processComplete = '{}')
+        and lastPingExpires > now()
+)"""
+)
+
+@field(
+    name = kind,
+    dataType = text,
+    modelExpr = "@json_lens('processStart', 'kind')"
+)
+
+@field(
+    name = lastPingExpires,
+    dataType = timestamp,
+    label = "Last Ping Expires At",
+    modelExpr = "(lastPingAt + cast('1 minute', interval))"
+)
+
+@field(
+    name = mostRecentChildUid,
+    dataType = Uid,
+    sqlExpr = """(
+    select 
+        inner_processrun.uid 
+    from 
+        processrun inner_processrun 
+    where 
+        inner_processrun.parentprocessrunuid = outer.uid 
+    order by 
+        inner_processrun.startedat desc 
+    limit 
+        1
+)"""
+)
+
+uid              Uid @key @required @field(extraConfig = """{"insertable":true,"autoGenerator":{"length":32,"type":"uid"}}""");
+processDefUid    ProcessDef @nullable @fetch(processDef);
+minionUid        Minion @required @fetch(minion);
+parentProcessRunUid  ProcessRun @nullable @fetch(parentProcessRun);
+category         text @nullable;
+startedAt        timestamp @required;
+completedAt      timestamp @nullable;
+lastPingAt       timestamp @required;
+mailbox          varchar(34) @nullable;
+processStart     jsonb @nullable;
+lastPing         jsonb @nullable;
+processComplete  jsonb @nullable;
+extraData        jsonb @nullable;
+serviceUid       text;
+
+}

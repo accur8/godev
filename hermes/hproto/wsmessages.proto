@@ -1,0 +1,228 @@
+syntax = "proto3";
+
+
+import "google/protobuf/struct.proto";
+
+package hermes;
+option go_package = "accur8.io/hermes/hproto";
+
+message MessageFromClient {
+  oneof test_oneof {
+    SendMessageRequest    sendMessageRequest   = 1;
+    FirstMessage          firstMessage         = 2;
+    Ping                  ping                 = 3;
+    Pong                  pong                 = 4;
+    Notification          notification         = 5;
+    SubscribeRequest      subscribeRequest     = 6;
+  }
+}
+
+message Notification {
+  string message = 1;
+}
+
+message MessageToClient {
+  oneof test_oneof {
+    MessageEnvelope       messageEnvelope      = 1;
+    SendMessageResponse   sendMessageResponse  = 2;
+    Ping                  ping                 = 3;
+    Pong                  pong                 = 4;
+    Notification          notification         = 5;
+    SubscribeResponse     subscribeResponse    = 6;
+  }
+}
+
+message Ping {
+  bytes payload = 1;
+}
+
+message Pong {
+  bytes payload = 1;
+}
+
+message MessageHeader {
+  string               sender          = 1;
+  ContentType          contentType     = 2;
+  RpcHeader            rpcHeader       = 3;
+  int64                senderSequence  = 4;
+  repeated KeyValPair  extraHeaders    = 200;
+}
+
+message SenderEnvelope {
+  int64        created          = 1;
+}
+
+message ServerEnvelope {
+  uint64       sequence         = 1;
+  int64        created          = 2;
+  string       channel          = 3;
+  string       subscriptionId   = 4;
+}
+
+message KeyValPair {
+  string key = 1;
+  string val = 2;
+}
+
+message RpcHeader {
+  string          correlationId = 2;
+  string          endPoint      = 3;
+  RpcFrameType    frameType     = 4;
+  RpcErrorInfo    errorInfo     = 5;
+}
+
+
+enum RpcFrameType {
+  UnspecifiedRFT   = 0;
+  Request          = 1;
+  SuccessResponse  = 2;
+  ErrorResponse    = 3;
+}
+
+message RpcErrorInfo {
+  uint32 errorCode   = 1;
+  string message     = 2;
+  string stackTrace  = 3;
+}
+
+enum ContentType {
+  UnspecifiedCT  = 0;
+  Protobuf       = 1;
+  Json           = 2;
+  Binary         = 3;
+  Text           = 4;
+}
+
+message Message {
+  MessageHeader   header          = 1;
+  SenderEnvelope  senderEnvelope  = 2;
+  ServerEnvelope  serverEnvelope  = 3;
+  bytes           data            = 4;
+}
+
+message MessageEnvelope {
+  bytes           messageBytes   = 1;
+  ServerEnvelope  serverEnvelope = 2;
+}
+
+message SendMessageRequest {
+    repeated string     to                    = 1;
+    Message             message               = 2;
+    string              channel               = 3;
+    string              idempotentId          = 4;
+}
+
+message SendMessageResponse {
+    repeated SendMessageError  errors                = 1;
+    repeated string            duplicates            = 2;
+    string                     idempotentId          = 3;
+    string                     correlationId         = 4;
+}
+
+message SendReceipt {
+  SendMessageRequest   request         = 1;  
+  SendMessageResponse  response        = 2;
+  ServerEnvelope       serverEnvelope  = 3;
+}
+
+message SendMessageError {
+  string     message = 1;
+  string     to      = 2;
+}
+
+message FirstMessage {
+  SenderInfo             senderInfo          = 1;
+  uint32                 mailboxTimeoutInMs  = 2;
+  repeated Subscription  subscriptions       = 3;
+}
+
+message SenderInfo {
+  string   readerKey  = 1;
+  string   address  = 2;
+}
+
+message SubscribeRequest {
+  repeated Subscription  subscriptions  = 1;
+}
+
+message SubscribeResponse {
+  repeated string          succeeded   = 1;
+  repeated SubscribeError  errors      = 2;
+}
+
+message SubscribeError {
+  string  state    = 2;
+  string  message  = 3;
+}
+
+message Subscription {
+  oneof test_oneof {
+    MailboxSubscription            mailbox            = 1;
+    NefarioSubscription            nefario            = 2;
+    ChangeDataCaptureSubscription  changeDataCapture  = 3;
+    Unsubscribe                    unsubscribe        = 4;
+  }
+}
+
+message MailboxSubscription {
+  string     id                   = 1;
+  string     state                = 2;
+  string     readerKey            = 3;
+  string     channel              = 4;
+  string     startSeq             = 5;
+}
+
+message ChangeDataCaptureSubscription {
+  string                  id        = 1;
+  string                  state     = 2;
+  repeated RecordMatcher  matchers  = 3;
+  string                  startSeq  = 4;
+}
+
+message RecordMatcher {
+  string                          database     = 1;
+  string                          table        = 2;
+  repeated google.protobuf.Value  primaryKeys  = 3;
+}
+
+message NefarioSubscription {
+  string     id                   = 1;
+  string     state                = 2;
+  string     processUid           = 3;
+  string     channel              = 4;
+  string     startSeq             = 5;
+}
+
+message Unsubscribe {
+  string   id    = 1;
+}
+
+message CreateMailboxRequest {
+  repeated string          channels              = 1;
+  google.protobuf.Struct   privateMetadata       = 2;
+  google.protobuf.Struct   publicMetadata        = 3;
+  int64                    purgeTimeoutInMillis  = 4;
+  int64                    closeTimeoutInMillis  = 5;
+  google.protobuf.Struct   extraData             = 6;
+}
+
+message CreateMailboxResponse {
+  string           adminKey   = 1;
+  string           address  = 2;
+  string           readerKey  = 3;
+  repeated string  channels   = 4;
+}
+
+message AddChannelRequest {
+  string           adminKey  = 1;
+  repeated string  channels  = 2;
+}
+
+message AddChannelResponse {
+}
+
+service HermesService {
+  rpc SendReceive(stream MessageFromClient) returns (stream MessageToClient);
+  rpc CreateMailbox(CreateMailboxRequest) returns (CreateMailboxResponse);
+  rpc AddChannel(AddChannelRequest) returns (AddChannelResponse);
+}

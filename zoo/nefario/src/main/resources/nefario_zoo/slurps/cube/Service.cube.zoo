@@ -1,0 +1,59 @@
+
+
+composite Service {
+
+@sqltable(auditlog=true)
+
+@field(
+    name = CalculatedMostRecentProcessRunUid,
+    dataType = Uid,
+    label = "Calculated Most Recent Process Uid",
+    sqlExpr = """(
+    select
+        uid
+    from
+        processrun aaa
+    where
+        outer.uid = aaa.serviceuid
+    order by
+        startedat desc
+    limit 1
+)"""
+)
+
+@field(
+    name = exists,
+    dataType = Bool,
+    modelExpr = "@json_lens_bool('systemdUnitJson', 'exists')",
+    extraConfig = """{
+  "required":true
+}"""
+)
+
+@field(
+    name = status,
+    dataType = text,
+    modelExpr = "@json_lens_str('systemdUnitJson', 'sub')",
+    extraConfig = """{
+  "required":true
+}"""
+)
+
+@field(
+    name = Mailbox,
+    dataType = text,
+    modelExpr = "MinionProcess.Mailbox"
+)
+
+uid              Uid @key @required @field(extraConfig = """{"insertable":true,"autoGenerator":{"length":32,"type":"uid"}}""");
+name             varchar(255) @required;
+minionUid        Minion @required @fetch(minion);
+minionEnabled    bool @required;
+extraConfig      Json @nullable;
+systemdUnitJson  Json @nullable;
+mostRecentProcessRunUid  ProcessRun @fetch(mostRecentProcessRun) @nullable;
+
+audit_version    long @nullable @readonly { ~scala { @default(None) }};
+audit_userGroupUid  UserUid @nullable @readonly;
+
+}

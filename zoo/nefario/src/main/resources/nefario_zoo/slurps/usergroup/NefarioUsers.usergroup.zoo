@@ -1,0 +1,4 @@
+@UserGroup(
+    name = NefarioUsers,
+    description = "Nefario Users"
+)

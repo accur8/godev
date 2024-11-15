@@ -1,0 +1,34 @@
+# authtoken sqlc_01HKAZDB26GCQ23AC33D28YVAN
+# set -x SQLC_AUTH_TOKEN sqlc_01HKAZDB26GCQ23AC33D28YVAN
+version: "2"
+#cloud:
+#  project: "01HKAZC4170NKSEXRS5FNS4Z3M"
+sql:
+- engine: "postgresql"
+  queries: "query.sql"
+  schema: "schema.sql"
+  database:
+    uri: postgresql://glen:@localhost:5432/glen
+  gen:
+    go:
+      package: "db"
+      out: "./"
+      sql_package: "pgx/v5"
+      rename:
+        userlogin: "UserLogin"
+        startedat: "StartedAt"
+        completedat: "CompletedAt"
+        processdefuid: ProcessDefUid
+        serveruid: ServerUid
+        lastping: LastPing
+        extradata: ExtraData
+        parentprocessrunuid: ParentProcessRunUid
+        processrun: ProcessRun
+        processstart: ProcessStart
+        processcomplete: ProcessComplete
+        natsurl: NatsUrl
+        systemdunitjson: SystemdUnitJson
+        serviceuid: ServiceUid
+        mostrecentprocessrunuid: MostRecentProcessRunUid
+        minionuid: MinionUid
+        minionenabled: MinionEnabled
