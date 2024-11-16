@@ -68,6 +68,10 @@ func ParseDeployInfo(rawArg string) (*DeployInfo, error) {
 
 func Deploy(args []string) error {
 
+	if 1 == 0+1 {
+		return nil
+	}
+
 	deploys := make([]*DeployInfo, 0, len(args))
 
 	for _, arg := range args {
@@ -243,7 +247,7 @@ func DeployApp(state *DeployState, appInfo *AppInfo, deployInfo *DeployInfo) err
 	//    - rsync copy staging dir to remote user
 	sshName := appInfo.User + "@" + appInfo.Server
 
-	err = RunCommand("ssh", sshName, "mkdir", "-p", remoteStagingDir)
+	err = RunCommand("ssh", sshName, "--", "mkdir", "-p", remoteStagingDir)
 	if err != nil {
 		return err
 	}
@@ -253,7 +257,13 @@ func DeployApp(state *DeployState, appInfo *AppInfo, deployInfo *DeployInfo) err
 		return err
 	}
 
-	err = RunCommand("ssh", sshName, "a8-install", remoteStagingDir)
+	args := []string{"ssh", sshName, "--", "a8"}
+	if log.IsTraceEnabled {
+		args = append(args, "--trace")
+	}
+	args = append(args, "local-install", remoteStagingDir)
+
+	err = RunCommand(args...)
 	if err != nil {
 		return err
 	}
@@ -277,6 +287,7 @@ func RunCommand(args ...string) error {
 	if err != nil {
 		return stacktrace.Propagate(err, "error running command: %s", commandStr)
 	}
+	log.Trace("command completed with exit code %v -- %s", cmd.ProcessState.ExitCode(), commandStr)
 	if cmd.ProcessState.ExitCode() != 0 {
 		return fmt.Errorf("command failed with exit code %v -- %s", cmd.ProcessState.ExitCode(), commandStr)
 	}

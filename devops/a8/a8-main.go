@@ -22,7 +22,9 @@ var localInstallCmd = &cobra.Command{
 func runSubCommand(args []string, subCommandFn func([]string) error) {
 	Bootstrap()
 	runSubCommand := func(ctx a8.ContextI) error {
-		return subCommandFn(args)
+		err := subCommandFn(args)
+		a8.GlobalApp().Context().Cancel()
+		return err
 	}
 	a8.GlobalApp().SubmitSubProcess("main", runSubCommand)
 	a8.GlobalApp().WaitForCompletion()
@@ -39,7 +41,7 @@ var deployCmd = &cobra.Command{
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "a8-main",
+	Use:   "a8",
 	Short: "A brief description of your application",
 	Run: func(cmd *cobra.Command, args []string) {
 		// This block runs if no subcommands are provided
