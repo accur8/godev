@@ -30,6 +30,7 @@ require (
 	google.golang.org/grpc v1.62.1
 	google.golang.org/protobuf v1.33.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
+	github.com/gurkankaymak/hocon v1.2.20
 )
 
 require (
