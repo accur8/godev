@@ -135,6 +135,14 @@ func ToJsonBytesE[A any](a A) ([]byte, error) {
 	return bytes, nil
 }
 
+func ToPrettyJsonBytes[A any](a A) []byte {
+	bytes, err := json.MarshalIndent(a, "", "  ")
+	if err != nil {
+		return nil
+	}
+	return bytes
+}
+
 func ToJsonBytes[A interface{}](a *A) []byte {
 	bytes, err := json.Marshal(a)
 	if err != nil {

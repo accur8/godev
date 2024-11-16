@@ -64,6 +64,9 @@ schema = 3
   [mod."github.com/gorilla/websocket"]
     version = "v1.5.1"
     hash = "sha256-eHZ/U+eeE5tSgWc1jEDuBwtTRbXKP9fqP9zfW4Zw8T0="
+  [mod."github.com/gurkankaymak/hocon"]
+    version = "v1.2.20"
+    hash = "sha256-DdREeG6Ka4hQs/ENysg/lB9E1I4v0wQ4qTU13dsMZmw="
   [mod."github.com/hashicorp/errwrap"]
     version = "v1.1.0"
     hash = "sha256-6lwuMQOfBq+McrViN3maJTIeh4f8jbEqvLy2c9FvvFw="

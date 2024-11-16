@@ -18,4 +18,10 @@ buildGoApplication {
   pwd = ./.;
   src = ./.;
   modules = ./gomod2nix.toml;
+  postInstall = ''
+    rm $out/bin/codegen
+    rm $out/bin/nefario-test
+    rm $out/bin/test
+    rm $out/bin/wal-listener
+  '';
 }
