@@ -13,5 +13,9 @@
     "webappExplode": true,
     "branch": "master",
     "installDir": "/Users/glen/code/accur8/godev/sandbox/qubes-api",
-    "backupDir": "/Users/glen/code/accur8/godev/sandbox/backups"
+    "backupDir": "/Users/glen/code/accur8/godev/sandbox/.backups",
+    "linkDataDir": true,
+    "linkLogDir": true,
+    "linkTempDir": true,
+    "linkCacheDir": true
 }

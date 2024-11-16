@@ -18,22 +18,30 @@ import (
 )
 
 /*
-TODO ??? handle data directories
-TODO ??? handle data files
-TODO ??? .a8-install directory with build dir and backups dir
+TODO ??? default vm args
+  - -Dapp.name=name
+  - -Djava.io.tmpdir=/path/to/tempdir
+  - -Dlog.dir=/path/to/logdir
 */
 type InstallDescriptor struct {
-	Name               string `json:"name"`
-	Organization       string `json:"organization"`
-	Artifact           string `json:"artifact"`
-	Version            string `json:"version"`
-	InstallDir         string `json:"installDir"`
-	WebappExplode      *bool  `json:"webappExplode"`
-	MainClass          string `json:"mainClass"`
-	Branch             string `json:"branch"`
-	Repo               string `json:"repo"`
-	JavaRuntimeVersion string `json:"javaRuntimeVersion"`
-	BackupDir          string `json:"backupDir"`
+	Name                 string   `json:"name"`
+	Organization         string   `json:"organization"`
+	Artifact             string   `json:"artifact"`
+	Version              string   `json:"version"`
+	InstallDir           string   `json:"installDir"`
+	WebappExplode        *bool    `json:"webappExplode"`
+	MainClass            string   `json:"mainClass"`
+	Branch               string   `json:"branch"`
+	Repo                 string   `json:"repo"`
+	JavaRuntimeVersion   string   `json:"javaRuntimeVersion"`
+	BackupDir            string   `json:"backupDir"`
+	JvmArgs              []string `json:"jvmArgs"`
+	Args                 []string `json:"args"`
+	IncludeDefaultVmArgs bool     `json:"includeDefaultVmArgs"`
+	LinkDataDir          bool     `json:"linkDataDir"`
+	LinkTempDir          bool     `json:"linkTempDir"`
+	LinkCacheDir         bool     `json:"linkCacheDir"`
+	LinkLogDir           bool     `json:"linkLogdir"`
 }
 
 // Create a new root command
@@ -182,6 +190,7 @@ type ResolvedDirectories struct {
 	TempInstallDir string
 	TempBuildDir   string
 	InstallDir     string
+	AppsRootDir    string
 }
 
 type NixBuildDescriptionResponse struct {
@@ -301,7 +310,7 @@ func resolveDirectories(state *InstallerState) (*ResolvedDirectories, error) {
 
 	timestampStr := a8.FileSystemCompatibleTimestamp()
 
-	tempInstallDir := filepath.Join(installDirParent, "build-"+state.InstallDescriptor.Name+"-"+timestampStr)
+	tempInstallDir := filepath.Join(installDirParent, "./.build/"+state.InstallDescriptor.Name+"-"+timestampStr)
 
 	tempBuildDir := filepath.Join(tempInstallDir, "nix")
 
@@ -314,6 +323,7 @@ func resolveDirectories(state *InstallerState) (*ResolvedDirectories, error) {
 		TempInstallDir: tempInstallDir,
 		TempBuildDir:   tempBuildDir,
 		InstallDir:     installDir,
+		AppsRootDir:    filepath.Dir(installDir),
 	}
 
 	log.Debug("Resolved directories %v", rd)
@@ -397,6 +407,26 @@ func setupInstallDir(state *InstallerState) error {
 	err := copyDirectory(state.InstallSpecDir, tempInstallDir)
 	if err != nil {
 		return stacktrace.Propagate(err, "Error copying %v to %v", state.InstallSpecDir, tempInstallDir)
+	}
+
+	type dir struct {
+		name   string
+		config bool
+	}
+	dirs := []dir{
+		{"data", state.InstallDescriptor.LinkDataDir},
+		{"tmp", state.InstallDescriptor.LinkTempDir},
+		{"cache", state.InstallDescriptor.LinkCacheDir},
+		{"logs", state.InstallDescriptor.LinkLogDir},
+	}
+
+	for _, d := range dirs {
+		if d.config {
+			err = linkExternalDir(d.name, state)
+			if err != nil {
+				return stacktrace.Propagate(err, "Error linking %v directory", d.name)
+			}
+		}
 	}
 
 	return nil
@@ -551,6 +581,8 @@ func FetchBuildDescription(state *InstallerState) (*NixBuildDescriptionResponse,
 		Branch:        state.InstallDescriptor.Branch,
 		JavaVersion:   state.InstallDescriptor.JavaRuntimeVersion,
 		WebappExplode: state.InstallDescriptor.WebappExplode,
+		JvmArgs:       state.InstallDescriptor.JvmArgs,
+		Args:          state.InstallDescriptor.Args,
 	}
 
 	apiUrl := state.Repository.RootUrl + "/api/nixBuildDescription"
@@ -626,4 +658,21 @@ func resolveRepository(repoPrefix string, repoProperties map[string]string) (*Re
 	repo.RootUrl = a8.RootUrl(repo.ResolvedUrl)
 
 	return &repo, nil
+}
+
+func linkExternalDir(name string, state *InstallerState) error {
+	rootDir := state.Directories.AppsRootDir
+	dir := filepath.Join(rootDir, "."+name, state.InstallDescriptor.Name)
+	if !a8.DirectoryExists(dir) {
+		err := os.MkdirAll(dir, 0755)
+		if err != nil {
+			return stacktrace.Propagate(err, "Error creating directory %v", dir)
+		}
+	}
+	inInstallDir := filepath.Join(state.Directories.TempInstallDir, name)
+	err := os.Symlink(dir, inInstallDir)
+	if err != nil {
+		return stacktrace.Propagate(err, "Error creating symlink %v -> %v", inInstallDir, dir)
+	}
+	return nil
 }
