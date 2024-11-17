@@ -24,5 +24,11 @@ langs/java/build
 testbed.json
 /hermes/hermes/nefario-checks.json
 /test/nefario-checks.json
-sandbox/codegen
-sandbox/backups
+/sandbox/codegen
+/sandbox/backups
+/sandbox/.backups/
+/sandbox/.cache/
+/sandbox/.data/
+/sandbox/.tmp/
+/sandbox/install-spec-dir copy/
+/sandbox/qubes-api/

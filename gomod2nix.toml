@@ -40,6 +40,9 @@ schema = 3
   [mod."github.com/getsentry/sentry-go"]
     version = "v0.23.0"
     hash = "sha256-VR6IL+yIc+BV5xBGfPJ7ixsAVzJ/hzuvXmkkAn1cTk4="
+  [mod."github.com/go-akka/configuration"]
+    version = "v0.0.0-20200606091224-a002c0330665"
+    hash = "sha256-LTI1+gslPdRfdck9FuCkOsN/JxVoiudvudTiG+PbvQk="
   [mod."github.com/go-co-op/gocron/v2"]
     version = "v2.2.6"
     hash = "sha256-CRebaUq3F9PZK7f6PBqG0DyQKU5DJhkfPEtB271MXY8="
@@ -64,9 +67,6 @@ schema = 3
   [mod."github.com/gorilla/websocket"]
     version = "v1.5.1"
     hash = "sha256-eHZ/U+eeE5tSgWc1jEDuBwtTRbXKP9fqP9zfW4Zw8T0="
-  [mod."github.com/gurkankaymak/hocon"]
-    version = "v1.2.20"
-    hash = "sha256-DdREeG6Ka4hQs/ENysg/lB9E1I4v0wQ4qTU13dsMZmw="
   [mod."github.com/hashicorp/errwrap"]
     version = "v1.1.0"
     hash = "sha256-6lwuMQOfBq+McrViN3maJTIeh4f8jbEqvLy2c9FvvFw="
@@ -175,6 +175,9 @@ schema = 3
   [mod."github.com/pkg/errors"]
     version = "v0.9.1"
     hash = "sha256-mNfQtcrQmu3sNg/7IwiieKWOgFQOVVe2yXgKBpe/wZw="
+  [mod."github.com/plus3it/gorecurcopy"]
+    version = "v0.0.1"
+    hash = "sha256-0BcMcCn60kOT8zOTJwWx8Di7fZjabhVCaGqsxNStUzQ="
   [mod."github.com/pmezard/go-difflib"]
     version = "v1.0.1-0.20181226105442-5d4384ee4fb2"
     hash = "sha256-XA4Oj1gdmdV/F/+8kMI+DBxKPthZ768hbKsO3d9Gx90="

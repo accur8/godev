@@ -9,8 +9,9 @@ import (
 
 	"accur8.io/godev/a8"
 	"accur8.io/godev/log"
-	"github.com/gurkankaymak/hocon"
+	"github.com/go-akka/configuration"
 	"github.com/palantir/stacktrace"
+	"github.com/plus3it/gorecurcopy"
 )
 
 /*
@@ -67,10 +68,6 @@ func ParseDeployInfo(rawArg string) (*DeployInfo, error) {
 }
 
 func Deploy(args []string) error {
-
-	if 1 == 0+1 {
-		return nil
-	}
 
 	deploys := make([]*DeployInfo, 0, len(args))
 
@@ -215,8 +212,7 @@ func DeployApp(state *DeployState, appInfo *AppInfo, deployInfo *DeployInfo) err
 
 	appInfo.StagingDir = appStagingDir
 
-	// copy config files into staging
-	err = RunCommand("cp", "--recursive", "--archive", appInfo.Dir, state.StagingRootDir)
+	err = gorecurcopy.CopyDirectory(appInfo.Dir, appStagingDir)
 	if err != nil {
 		return err
 	}
@@ -299,27 +295,19 @@ func loadApplicationDotHocon(appDir string) (*ApplicationDotHocon, error) {
 	if !a8.FileExists(filePath) {
 		return nil, fmt.Errorf("file not found: %s", filePath)
 	}
-	config, err := hocon.ParseResource(filePath)
-	if err != nil {
-		return nil, stacktrace.Propagate(err, "error parsing hocon file: %s", filePath)
-	}
+	config := configuration.LoadConfig(filePath)
+	// if err != nil {
+	// 	return nil, stacktrace.Propagate(err, "error parsing hocon file: %s", filePath)
+	// }
 	var appDotHocon ApplicationDotHocon
 
-	getString := func(name string) string {
-		s := config.GetString(name)
-		return strings.Trim(string(s), `"`)
-	}
-
-	fixstr := func(s string) string {
-		return strings.Trim(s, `"`)
-	}
-
-	listenPort := config.GetInt("listenPort")
+	listenPort := config.GetInt32("listenPort")
 	if listenPort != 0 {
-		appDotHocon.ListenPort = &listenPort
+		t := int(listenPort)
+		appDotHocon.ListenPort = &t
 	}
 
-	domainName := getString("domainName")
+	domainName := config.GetString("domainName")
 	if domainName != "" {
 		appDotHocon.DomainName = domainName
 	}
@@ -334,16 +322,17 @@ func loadApplicationDotHocon(appDir string) (*ApplicationDotHocon, error) {
 	if install != nil {
 		appDotHocon.Install = &InstallDescriptor{}
 		appDotHocon.Install.Name = filepath.Base(appDir)
-		appDotHocon.Install.MainClass = fixstr(install.GetString("mainClass"))
-		appDotHocon.Install.Args = install.GetStringSlice("args")
-		appDotHocon.Install.Artifact = fixstr(install.GetString("artifact"))
-		appDotHocon.Install.Organization = fixstr(install.GetString("organization"))
-		appDotHocon.Install.Version = fixstr(install.GetString("version"))
-		appDotHocon.Install.Branch = fixstr(install.GetString("branch"))
-		appDotHocon.Install.JavaRuntimeVersion = fixstr(install.GetString("javaVersion"))
-		appDotHocon.Install.Repo = fixstr(install.GetString("repo"))
+		appDotHocon.Install.MainClass = install.GetString("mainClass")
+		appDotHocon.Install.Args = install.GetStringList("args")
+		appDotHocon.Install.JvmArgs = install.GetStringList("jvmArgs")
+		appDotHocon.Install.Artifact = install.GetString("artifact")
+		appDotHocon.Install.Organization = install.GetString("organization")
+		appDotHocon.Install.Version = install.GetString("version")
+		appDotHocon.Install.Branch = install.GetString("branch")
+		appDotHocon.Install.JavaRuntimeVersion = install.GetString("javaVersion")
+		appDotHocon.Install.Repo = install.GetString("repo")
 
-		wex := install.Get("webappExplode")
+		wex := install.GetNode("webappExplode")
 		if wex != nil {
 			b := install.GetBoolean("webappExplode")
 			appDotHocon.Install.WebappExplode = &b
@@ -352,6 +341,10 @@ func loadApplicationDotHocon(appDir string) (*ApplicationDotHocon, error) {
 			appDotHocon.Install.WebappExplode = &b
 		}
 	}
+
+	bam := config.Root()
+	log.Trace("bam: %v", bam)
+
 	log.Trace("loaded app %v: %v", appDir, appDotHocon.DomainName)
 	return &appDotHocon, nil
 }
