@@ -44,7 +44,9 @@ type InstallDescriptor struct {
 	LinkLogsDir          bool     `json:"linkLogsDir"`
 }
 
-func Install(commandLineArgs []string) error {
+func Install(subCommandArgs *SubCommandArgs) error {
+
+	commandLineArgs := subCommandArgs.RemainingArgs
 
 	if len(commandLineArgs) != 1 {
 		return stacktrace.NewError("Usage: a8-install [--trace] <install-spec-dir>")

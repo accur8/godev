@@ -19,10 +19,18 @@ var localInstallCmd = &cobra.Command{
 	},
 }
 
-func runSubCommand(args []string, subCommandFn func([]string) error) {
+func runSubCommand(args []string, subCommandFn func(*devops.SubCommandArgs) error) {
 	Bootstrap()
 	runSubCommand := func(ctx a8.ContextI) error {
-		err := subCommandFn(args)
+		config, err := devops.LoadDefaultConfig()
+		if err != nil {
+			return err
+		}
+		subCommandArgs := &devops.SubCommandArgs{
+			Config:        config,
+			RemainingArgs: args,
+		}
+		err = subCommandFn(subCommandArgs)
 		a8.GlobalApp().Context().Cancel()
 		return err
 	}
@@ -36,6 +44,15 @@ var deployCmd = &cobra.Command{
 	Short: "Deploys the passed application(s) to their remote user@server",
 	Run: func(cmd *cobra.Command, args []string) {
 		runSubCommand(args, devops.Deploy)
+	},
+}
+
+// nixgenCmd represents the deploy command
+var nixgenCmd = &cobra.Command{
+	Use:   "nixgen",
+	Short: "Generates the files to be included as part of proxmox-hosts",
+	Run: func(cmd *cobra.Command, args []string) {
+		runSubCommand(args, devops.NixGen)
 	},
 }
 
@@ -63,6 +80,7 @@ func main() {
 
 	rootCmd.AddCommand(localInstallCmd)
 	rootCmd.AddCommand(deployCmd)
+	rootCmd.AddCommand(nixgenCmd)
 
 	// Add the --trace flag to the root command
 	rootCmd.PersistentFlags().BoolVar(&trace, "trace", false, "Enable trace logging")
