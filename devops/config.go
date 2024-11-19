@@ -3,7 +3,9 @@ package devops
 import (
 	"encoding/json"
 	"os"
+	"os/user"
 	"path/filepath"
+	"strings"
 
 	"accur8.io/godev/a8"
 	"accur8.io/godev/log"
@@ -64,4 +66,25 @@ func findDirs(userHome string, name string) string {
 		}
 	}
 	return ""
+}
+
+func FindSshKeyPublicKeys() []string {
+	keys := []string{}
+	usr, err := user.Current()
+	if err != nil {
+		return keys
+	}
+
+	find := func(keyName string) {
+		sshKeyPath := filepath.Join(usr.HomeDir, ".ssh", keyName)
+		if a8.FileExists(sshKeyPath) {
+			contents := a8.ReadFile(sshKeyPath)
+			keys = append(keys, strings.TrimSpace(string(contents)))
+		}
+	}
+
+	find("id_rsa.pub")
+	find("id_ed25519.pub")
+
+	return keys
 }

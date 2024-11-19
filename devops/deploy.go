@@ -20,9 +20,10 @@ TODO ??? remove local and remote staging folders
 
 TODO ??? inline command running - show the output of the command with line by line contract
 
-TODO ??? git commit for each run
-  - each app has a last-deploy-results.json file
-  - stores the version deployed (and other info)
+TODO ??? store additional info in last-deploy.json
+  - local machine info
+  - user name
+  - ssh public key
 */
 type DeployInfo struct {
 	DomainName       string
@@ -33,8 +34,9 @@ type DeployInfo struct {
 }
 
 type LastDeploy struct {
-	Version   string
-	Timestamp string
+	Version   string   `json:"version"`
+	Timestamp string   `json:"timestamp"`
+	SshKeys   []string `json:"sshKeys"`
 }
 
 type App struct {
@@ -59,11 +61,12 @@ type Root struct {
 }
 
 type Server struct {
-	Name    string
-	VpnName string
-	Users   []*User
-	Dir     string
-	Root    *Root
+	Name        string
+	VpnName     string
+	Users       []*User
+	Dir         string
+	Root        *Root
+	NameInCaddy string
 }
 
 type User struct {
@@ -77,7 +80,7 @@ type ApplicationDotHocon struct {
 	Install     *InstallDescriptor `json:"install"`
 	Launcher    *Launcher          `json:"launcher"`
 	ListenPort  *int               `json:"listenPort"`
-	DomainName  string             `json:"domainName"`
+	DomainNames []string           `json:"domainNames"`
 	CaddyConfig string             `json:"caddyConfig"`
 }
 
@@ -142,6 +145,13 @@ func Deploy(subCommandArgs *SubCommandArgs) error {
 		return fmt.Errorf("errors: %s", strings.Join(errors, ", "))
 	}
 
+	log.Trace("committing successful deploy to server-app-configs git repo")
+	commitMsg := "deployed " + strings.Join(subCommandArgs.RemainingArgs, " ")
+	err = RunCommand("git", "-C", subCommandArgs.Config.ServerAppConfigsDir, "commit", "-am", commitMsg)
+	if err != nil {
+		return err
+	}
+
 	return nil
 
 }
@@ -170,6 +180,11 @@ func DeployApp(state *DeployState, deployInfo *DeployInfo) error {
 	err = gorecurcopy.CopyDirectory(deployInfo.App.Dir, localStagingDir)
 	if err != nil {
 		return err
+	}
+
+	stagedLastDeployFile := filepath.Join(localStagingDir, "last-deploy.json")
+	if a8.FileExists(stagedLastDeployFile) {
+		os.Remove(stagedLastDeployFile)
 	}
 
 	appInfo := deployInfo.App
@@ -220,15 +235,12 @@ func DeployApp(state *DeployState, deployInfo *DeployInfo) error {
 		return err
 	}
 
-	// err = RunCommand("ssh", sshName, "rm", "-rf", remoteStagingDir)
-	// if err != nil {
-	// 	return err
-	// }
 	log.Trace("sucessfully deployed %v", deployInfo.DomainName)
 
 	lastDeploy := &LastDeploy{
 		Version:   deployInfo.Version,
 		Timestamp: time.Now().UTC().String(),
+		SshKeys:   FindSshKeyPublicKeys(),
 	}
 	lastDeployFile := filepath.Join(deployInfo.App.Dir, "last-deploy.json")
 	err = a8.WriteFile(lastDeployFile, a8.ToPrettyJsonBytes(lastDeploy))
@@ -261,13 +273,10 @@ func RunCommand(args ...string) error {
 
 func loadApplicationDotHocon(appDir string) (*ApplicationDotHocon, error) {
 	filePath := filepath.Join(appDir, "application.hocon")
-	if !a8.FileExists(filePath) {
-		return nil, fmt.Errorf("file not found: %s", filePath)
+	config, err := loadHoconFile(filePath)
+	if err != nil {
+		return nil, stacktrace.Propagate(err, "error parsing hocon file: %s", filePath)
 	}
-	config := configuration.LoadConfig(filePath)
-	// if err != nil {
-	// 	return nil, stacktrace.Propagate(err, "error parsing hocon file: %s", filePath)
-	// }
 	var appDotHocon ApplicationDotHocon
 
 	listenPort := config.GetInt32("listenPort")
@@ -276,7 +285,17 @@ func loadApplicationDotHocon(appDir string) (*ApplicationDotHocon, error) {
 		appDotHocon.ListenPort = &t
 	}
 
-	appDotHocon.DomainName = config.GetString("domainName")
+	domainNames := []string{}
+	{
+		dn := config.GetString("domainName")
+		if dn != "" {
+			domainNames = append(domainNames, dn)
+		}
+		dnames := config.GetStringList("domainNames")
+		domainNames = append(domainNames, dnames...)
+	}
+
+	appDotHocon.DomainNames = domainNames
 	appDotHocon.CaddyConfig = config.GetString("caddyConfig")
 
 	launcher := config.GetConfig("launcher")
@@ -309,9 +328,29 @@ func loadApplicationDotHocon(appDir string) (*ApplicationDotHocon, error) {
 		}
 	}
 
-	log.Trace("loaded app %v: %v", appDir, appDotHocon.DomainName)
+	log.Trace("loaded app %v: %v", appDir, appDotHocon.DomainName())
 	return &appDotHocon, nil
 
+}
+
+func loadHoconFile(filePath string) (config *configuration.Config, err error) {
+	defer func() {
+		// recover from panic if one occurred. Set err to nil otherwise.
+		r := recover()
+		if r != nil {
+			err = fmt.Errorf("error parsing hocon %v -- %v", filePath, r)
+		}
+	}()
+	if !a8.FileExists(filePath) {
+		err = fmt.Errorf("file not found: %s", filePath)
+		return
+	}
+	config = configuration.LoadConfig(filePath)
+	if config == nil {
+		err = fmt.Errorf("error loading hocon file: %s", filePath)
+		return
+	}
+	return
 }
 
 func loadRoot(rootDir string) (*Root, error) {
@@ -360,10 +399,11 @@ func loadServer(dir string, root *Root) (*Server, error) {
 	}
 
 	server := &Server{
-		Name:    filepath.Base(dir),
-		Dir:     dir,
-		VpnName: config.GetString("vpnName"),
-		Root:    root,
+		Name:        filepath.Base(dir),
+		Dir:         dir,
+		VpnName:     config.GetString("vpnName"),
+		NameInCaddy: config.GetString("nameInCaddy"),
+		Root:        root,
 	}
 
 	server.Users = []*User{}
@@ -463,7 +503,7 @@ func (root *Root) FindApp(domainName string) *App {
 	for _, server := range root.Servers {
 		for _, user := range server.Users {
 			for _, app := range user.Apps {
-				if app.ApplicationDotHocon.DomainName == domainName {
+				if app.ApplicationDotHocon.IsNamed(domainName) {
 					return app
 				}
 			}
@@ -501,9 +541,29 @@ func (app *App) ExecPath() string {
 }
 
 func (Server *Server) CaddyName() string {
-	return Server.VpnName
+	if Server.NameInCaddy != "" {
+		return Server.NameInCaddy
+	} else {
+		return Server.VpnName
+	}
 }
 
 func (app *App) InstallDir() string {
 	return filepath.Join(app.User.AppsDir(), app.Name)
+}
+
+func (adh *ApplicationDotHocon) DomainName() string {
+	if len(adh.DomainNames) > 0 {
+		return adh.DomainNames[0]
+	}
+	return ""
+}
+
+func (adh *ApplicationDotHocon) IsNamed(domainName string) bool {
+	for _, dn := range adh.DomainNames {
+		if dn == domainName {
+			return true
+		}
+	}
+	return false
 }

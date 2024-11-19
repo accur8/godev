@@ -73,13 +73,14 @@ func CaddyConfig(app *App) *File {
 		if app.ApplicationDotHocon.ListenPort == nil {
 			return nil
 		}
+		virtualHostList := strings.Join(app.ApplicationDotHocon.DomainNames, " ")
 		listenPort := *app.ApplicationDotHocon.ListenPort
 		content = strings.TrimLeft(fmt.Sprintf(`
 %v {
   encode gzip
   reverse_proxy %v:%v
 }		
-		`, app.ApplicationDotHocon.DomainName, app.User.Server.CaddyName(), listenPort), "\n ")
+		`, virtualHostList, app.User.Server.CaddyName(), listenPort), "\n ")
 	} else {
 		content = app.ApplicationDotHocon.CaddyConfig
 	}

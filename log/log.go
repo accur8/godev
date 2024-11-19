@@ -14,6 +14,10 @@ var IsTraceEnabled bool
 var IsErrorEnabled bool
 var IsLoggingEnabled bool
 
+// ConsoleMode = true means we log to stdout OR stderr for warn and above
+// ConsoleMode = false means we log to stdout AND stderr for warn and above
+var ConsoleMode bool = true
+
 func init() {
 	IsTraceEnabled = true
 	IsLoggingEnabled = true
@@ -114,7 +118,9 @@ func logit(level *logLevel, format string, args ...any) {
 				errorWriter.Write([]byte(message + "\n"))
 			}
 		}
-		fmt.Println(message)
+		if !ConsoleMode || level.index < _WARN.index {
+			fmt.Println(message)
+		}
 		if detailWriter != nil {
 			detailWriter.Write([]byte(message + "\n"))
 		}
