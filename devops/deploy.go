@@ -16,16 +16,6 @@ import (
 	"github.com/plus3it/gorecurcopy"
 )
 
-/*
-TODO ??? remove local and remote staging folders
-
-TODO ??? inline command running - show the output of the command with line by line contract
-
-TODO ??? store additional info in last-deploy.json
-  - local machine info
-  - user name
-  - ssh public key
-*/
 type DeployInfo struct {
 	DomainName       string
 	Version          string
