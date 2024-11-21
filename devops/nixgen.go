@@ -60,10 +60,18 @@ func NixGen(subCommandArgs *SubCommandArgs) error {
 
 func GenerateContent(app *App) []*File {
 	files := []*File{}
-	if app.ApplicationDotHocon.ListenPort != nil {
-		files = append(files, CaddyConfig(app))
+	{
+		cc := CaddyConfig(app)
+		if cc != nil {
+			files = append(files, cc)
+		}
 	}
-	files = append(files, SupervisorConfig(app))
+	{
+		svc := SupervisorConfig(app)
+		if svc != nil {
+			files = append(files, svc)
+		}
+	}
 	return files
 }
 
@@ -92,7 +100,8 @@ func CaddyConfig(app *App) *File {
 
 func SupervisorConfig(app *App) *File {
 
-	content := strings.TrimLeft(fmt.Sprintf(`
+	if app.ApplicationDotHocon.Launcher.Kind == "supervisor" {
+		content := strings.TrimLeft(fmt.Sprintf(`
 [program:%v]
 
 command = %v
@@ -106,10 +115,13 @@ startsecs       = 5
 redirect_stderr = true
 user            = %v
 
-	`, app.Name, app.ExecPath(), app.InstallDir(), app.User.Name), "\n ")
+		`, app.Name, app.ExecPath(), app.InstallDir(), app.User.Name), "\n ")
 
-	return &File{
-		Path:    fmt.Sprintf("supervisor/%s/%s.conf", app.User.Server.Name, app.Name),
-		Content: content,
+		return &File{
+			Path:    fmt.Sprintf("supervisor/%s/%s.conf", app.User.Server.Name, app.Name),
+			Content: content,
+		}
+	} else {
+		return nil
 	}
 }
