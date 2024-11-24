@@ -35,9 +35,9 @@ type DeployInfo struct {
 }
 
 type LastDeploy struct {
-	Version   string   `json:"version"`
-	Timestamp string   `json:"timestamp"`
-	SshKeys   []string `json:"sshKeys"`
+	Version   string   `json:"Version"`
+	Timestamp string   `json:"Timestamp"`
+	SshKeys   []string `json:"SshKeys"`
 }
 
 type App struct {
@@ -45,7 +45,7 @@ type App struct {
 	Dir                 string
 	User                *User
 	ApplicationDotHocon *ApplicationDotHocon
-	LastDeployJson      *LastDeployJson
+	LastDeploy          *LastDeploy
 }
 
 type DeployState struct {
@@ -86,11 +86,6 @@ type ApplicationDotHocon struct {
 	CaddyConfig string             `json:"caddyConfig"`
 }
 
-type LastDeployJson struct {
-	Version   string
-	Timestamp string
-}
-
 func ParseDeployInfo(rawArg string) (*DeployInfo, error) {
 	if rawArg == "" {
 		return nil, fmt.Errorf("empty argument")
@@ -99,13 +94,12 @@ func ParseDeployInfo(rawArg string) (*DeployInfo, error) {
 	var deployInfo DeployInfo
 	deployInfo.DomainName = parts[0]
 
-	if len(parts) == 2 {
-		deployInfo.Version = parts[1]
-	} else if len(parts) == 1 {
+	if len(parts) == 1 || parts[1] == "" {
 		deployInfo.Version = "current"
 	} else {
-		return nil, fmt.Errorf("invalid specification, must have at most one colon character")
+		deployInfo.Version = parts[1]
 	}
+
 	return &deployInfo, nil
 }
 
@@ -169,7 +163,7 @@ func Deploy(subCommandArgs *SubCommandArgs) error {
 }
 
 func isCurrentVersionLabel(version string) bool {
-	var currentVersionLabels = []string{"current", "latest", ""}
+	var currentVersionLabels = []string{"current", ""}
 
 	for _, label := range currentVersionLabels {
 		if version == label {
@@ -217,12 +211,12 @@ func DeployApp(state *DeployState, deployInfo *DeployInfo) error {
 
 	// Settle explicit version
 	if isCurrentVersionLabel(deployInfo.Version) {
-		if appInfo.LastDeployJson == nil {
+		if appInfo.LastDeploy == nil {
 			err = fmt.Errorf("last-deploy.json needed in order to fetch current version")
 			return err
 		}
 
-		deployInfo.Version = appInfo.LastDeployJson.Version
+		deployInfo.Version = appInfo.LastDeploy.Version
 	}
 
 	install.Name = appInfo.Name
@@ -304,24 +298,24 @@ func RunCommand(args ...string) error {
 	return nil
 }
 
-func LoadLastDeployJson(appDir string) (*LastDeployJson, error) {
+func LoadLastDeployJson(appDir string) (*LastDeploy, error) {
 	filePath := filepath.Join(appDir, "last-deploy.json")
 
 	if !a8.FileExists(filePath) {
 		return nil, nil
 	}
 
-	var lastDeployJson LastDeployJson
+	var lastDeploy LastDeploy
 
 	jsonBytes := a8.ReadFile(filePath)
-	err := json.Unmarshal(jsonBytes, &lastDeployJson)
+	err := json.Unmarshal(jsonBytes, &lastDeploy)
 
 	if err != nil {
 		err = fmt.Errorf("error loading last-deploy.json file: %s", filePath)
 		return nil, err
 	}
 
-	return &lastDeployJson, err
+	return &lastDeploy, err
 }
 
 func loadApplicationDotHocon(appDir string) (*ApplicationDotHocon, error) {
@@ -527,7 +521,7 @@ func loadApp(appDir string, user *User) (*App, error) {
 		return nil, nil
 	}
 	appDotHocon, err := loadApplicationDotHocon(appDir)
-	lastDeployJson, err := LoadLastDeployJson(appDir)
+	lastDeploy, err := LoadLastDeployJson(appDir)
 
 	if err != nil {
 		return nil, err
@@ -538,7 +532,7 @@ func loadApp(appDir string, user *User) (*App, error) {
 		Dir:                 appDir,
 		User:                user,
 		ApplicationDotHocon: appDotHocon,
-		LastDeployJson:      lastDeployJson,
+		LastDeploy:          lastDeploy,
 	}
 
 	return app, nil
