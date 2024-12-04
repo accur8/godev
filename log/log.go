@@ -111,7 +111,7 @@ func Error(format string, args ...any) {
 	logit(_ERROR, format, args...)
 }
 
-var logTimeStampFormat = "2006-01-02T15:04:05.999999Z07:00"
+var logTimeStampFormat = "2006-01-02T15:04:05.999999Z"
 
 func logit(level *logLevel, format string, args ...any) {
 
@@ -122,7 +122,7 @@ func logit(level *logLevel, format string, args ...any) {
 		// TIME | LEVEL | GOID | MESSAGE
 		nowStr := time.Now().UTC().Format(logTimeStampFormat) // "2006-01-02T15:04:05.666Z"
 
-		zeroCount := 27 - len(nowStr)
+		zeroCount := 26 - len(nowStr)
 		if zeroCount >= 0 {
 			if zeroCount > shortTimestampFixesLen {
 				zeroCount = shortTimestampFixesLen
