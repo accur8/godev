@@ -8,6 +8,7 @@ import (
 
 	"accur8.io/godev/a8"
 	"accur8.io/godev/log"
+	"github.com/palantir/stacktrace"
 )
 
 type File struct {
@@ -16,6 +17,13 @@ type File struct {
 }
 
 func NixGen(subCommandArgs *SubCommandArgs) error {
+
+	// log.Trace("trombone titicaca tamborine")
+	// log.Debug("dastardly dudes destroying detroit")
+	// log.Info("in incognito ignomious intelligence")
+	// log.Warn("wet watery whimpering")
+	// log.Error("screaming silently")
+	// os.Exit(1)
 
 	devopsConfig := subCommandArgs.Config
 
@@ -67,8 +75,10 @@ func GenerateContent(app *App) []*File {
 		}
 	}
 	{
-		svc := SupervisorConfig(app)
-		if svc != nil {
+		svc, err := SupervisorConfig(app)
+		if err != nil {
+			log.Error("failed to generate supervisor config for app %v -- %v", app.Name, err)
+		} else if svc != nil {
 			files = append(files, svc)
 		}
 	}
@@ -91,7 +101,7 @@ func CaddyConfig(app *App) *File {
 		listenPort := *app.ApplicationDotHocon.ListenPort
 		content = strings.TrimLeft(fmt.Sprintf(`
 %v {
-  encode gzip
+  encode zstd gzip
   reverse_proxy %v:%v
 }		
 		`, virtualHostList, app.User.Server.CaddyName(), listenPort), "\n ")
@@ -104,31 +114,60 @@ func CaddyConfig(app *App) *File {
 	}
 }
 
-func SupervisorConfig(app *App) *File {
+func SupervisorConfig(app *App) (*File, error) {
 
 	if app.ApplicationDotHocon.Launcher.Kind == "supervisor" {
-		content := strings.TrimLeft(fmt.Sprintf(`
-[program:%v]
 
-command = %v
+		type SupervisorConfig struct {
+			AppName   string
+			Command   string
+			Directory string
+			User      string
+		}
 
-directory = %v
+		var templateContent string
+
+		if app.ApplicationDotHocon.Launcher.RawConfig == "" {
+			templateContent = strings.TrimLeft(`
+[program:{{.AppName}}]
+
+command = {{.Command}}
+
+directory = {{.Directory}}
 
 autostart       = true
 autorestart     = true
 startretries    = 0
 startsecs       = 5
 redirect_stderr = true
-user            = %v
+user            = {{.User}}
+`, "\n\t ")
+		} else {
+			templateContent = app.ApplicationDotHocon.Launcher.RawConfig
+		}
 
-		`, app.Name, app.ExecPath(), app.InstallDir(), app.User.Name), "\n ")
+		content, err := a8.TemplatedString(
+			&a8.TemplateRequest{
+				Name:    "supervisor-config",
+				Content: templateContent,
+				Data: SupervisorConfig{
+					AppName:   app.Name,
+					Command:   app.ExecPath(),
+					Directory: app.InstallDir(),
+					User:      app.User.Name,
+				},
+			},
+		)
+		if err != nil {
+			return nil, stacktrace.Propagate(err, "failed to execute supervisor template")
+		}
 
 		return &File{
 			Path:    fmt.Sprintf("supervisor/%s/%s.conf", app.User.Server.Name, app.Name),
 			Content: content,
-		}
+		}, nil
 	} else {
-		return nil
+		return nil, nil
 	}
 }
 

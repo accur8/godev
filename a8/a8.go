@@ -2,6 +2,7 @@ package a8
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -14,6 +15,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"text/template"
 	"time"
 
 	"accur8.io/godev/log"
@@ -900,4 +902,30 @@ func FileSystemCompatibleTimestamp() string {
 	t := time.Now()
 	timestampStr := t.Format("20060102-150405")
 	return timestampStr
+}
+
+type TemplateRequest struct {
+	Name    string
+	Content string
+	Data    interface{}
+}
+
+func TemplatedString(req *TemplateRequest) (string, error) {
+	if req.Name == "" {
+		req.Name = "template"
+	}
+	content := req.Content
+	data := req.Data
+	tmpl, err := template.New(req.Name).Parse(req.Content)
+	if err != nil {
+		return "", stacktrace.Propagate(err, "failed to parse template -- %v", content)
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, data)
+	if err != nil {
+		return "", stacktrace.Propagate(err, "failed to execute template -- %v -- %v", content, data)
+	}
+
+	return buf.String(), nil
 }

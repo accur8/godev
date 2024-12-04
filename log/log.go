@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
+	"github.com/gookit/color"
 	"github.com/petermattis/goid"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
@@ -25,6 +27,17 @@ func init() {
 
 var errorWriter *lumberjack.Logger
 var detailWriter *lumberjack.Logger
+
+var shortTimestampFixes = []string{
+	"0Z",
+	"00Z",
+	"000Z",
+	"0000Z",
+	"00000Z",
+	"000000Z",
+}
+
+const shortTimestampFixesLen = 6
 
 func InitFileLogging(logDir string, appName string) {
 	logDir, _ = filepath.Abs(logDir)
@@ -108,9 +121,38 @@ func logit(level *logLevel, format string, args ...any) {
 
 		// TIME | LEVEL | GOID | MESSAGE
 		nowStr := time.Now().UTC().Format(logTimeStampFormat) // "2006-01-02T15:04:05.666Z"
+
+		zeroCount := 27 - len(nowStr)
+		if zeroCount >= 0 {
+			if zeroCount > shortTimestampFixesLen {
+				zeroCount = shortTimestampFixesLen
+			}
+			replace := shortTimestampFixes[zeroCount]
+			nowStr = strings.ReplaceAll(nowStr, "Z", replace)
+		}
+
 		goid := goid.Get()
 
-		message := fmt.Sprintf("%s | %s | %d | %s", nowStr, level.name, goid, logMessage)
+		levelName := level.name
+		if ConsoleMode {
+			var levelColor color.Color256
+			switch level.index {
+			case _TRACE.index:
+				levelColor = color.C256(33)
+			case _DEBUG.index:
+				levelColor = color.C256(51)
+			case _INFO.index:
+				levelColor = color.C256(46)
+			case _WARN.index:
+				levelColor = color.C256(214)
+			case _ERROR.index:
+				levelColor = color.C256(196)
+
+			}
+			levelName = levelColor.Sprintf(level.name)
+		}
+
+		message := fmt.Sprintf("%s | %s | %d | %s", nowStr, levelName, goid, logMessage)
 
 		if level.index >= _WARN.index {
 			fmt.Fprintln(os.Stderr, message)
