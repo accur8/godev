@@ -41,7 +41,8 @@ type DeployState struct {
 }
 
 type Launcher struct {
-	Kind string `json:"kind"`
+	Kind      string `json:"kind"`
+	RawConfig string `json:"rawConfig"`
 }
 
 type Root struct {
@@ -292,6 +293,7 @@ func loadApplicationDotHocon(appDir string) (*ApplicationDotHocon, error) {
 	if launcher != nil {
 		appDotHocon.Launcher = &Launcher{}
 		appDotHocon.Launcher.Kind = launcher.GetString("kind")
+		appDotHocon.Launcher.RawConfig = launcher.GetString("rawConfig")
 	}
 
 	install := config.GetConfig("install")
