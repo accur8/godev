@@ -42,7 +42,15 @@ type DeployState struct {
 
 type Launcher struct {
 	Kind      string `json:"kind"`
+	Timer     *Timer `json:"timer"`
 	RawConfig string `json:"rawConfig"`
+}
+
+type Timer struct {
+	OnCalendar        string `json:"onCalendar"`
+	OnBootSec         string `json:"onBootSec"`
+	OnUnitActiveSec   string `json:"onUnitActiveSec"`
+	OnUnitInactiveSec string `json:"onUnitInactiveSec"`
 }
 
 type Root struct {
@@ -294,6 +302,17 @@ func loadApplicationDotHocon(appDir string) (*ApplicationDotHocon, error) {
 		appDotHocon.Launcher = &Launcher{}
 		appDotHocon.Launcher.Kind = launcher.GetString("kind")
 		appDotHocon.Launcher.RawConfig = launcher.GetString("rawConfig")
+
+		timer := launcher.GetConfig("timer")
+		if timer != nil {
+			appDotHocon.Launcher.Timer = &Timer{
+				OnBootSec:         timer.GetString("onBootSec"),
+				OnCalendar:        timer.GetString("onCalendar"),
+				OnUnitActiveSec:   timer.GetString("onUnitActiveSec"),
+				OnUnitInactiveSec: timer.GetString("onUnitInactiveSec"),
+			}
+		}
+
 	}
 
 	install := config.GetConfig("install")
