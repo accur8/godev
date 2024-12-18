@@ -63,6 +63,11 @@ func GenerateContent(app *App) []*File {
 	if app.ApplicationDotHocon.ListenPort != nil {
 		files = append(files, CaddyConfig(app))
 	}
+
+	if app.ApplicationDotHocon.CleanUp != nil && app.ApplicationDotHocon.CleanUp.Kind == "systemd" {
+		files = append(files, CleanUpSystemdServiceConfig(app))
+		files = append(files, CleanUpSystemdTimerConfig(app))
+	}
 	files = append(files, SupervisorConfig(app))
 	return files
 }
@@ -110,6 +115,40 @@ user            = %v
 
 	return &File{
 		Path:    fmt.Sprintf("supervisor/%s/%s.conf", app.User.Server.Name, app.Name),
+		Content: content,
+	}
+}
+
+func CleanUpSystemdServiceConfig(app *App) *File {
+
+	content := strings.TrimLeft(fmt.Sprintf(`
+[Unit]
+Description=Executes daily-cleanup-%v script
+
+[Service]
+ExecStart=/run/current-system/sw/bin/daily-cleanup %v/application.hocon
+	`, app.Name, app.InstallDir()), "\n ")
+
+	return &File{
+		Path:    fmt.Sprintf("systemd/%s/daily-cleanup-%s.service", app.User.Server.Name, app.Name),
+		Content: content,
+	}
+}
+
+func CleanUpSystemdTimerConfig(app *App) *File {
+
+	content := strings.TrimLeft(fmt.Sprintf(`
+[Unit]
+Description=Timer for daily-cleanup-%v service
+
+[Timer]
+OnCalendar=%v
+Unit=daily-cleanup-%v.service
+
+	`, app.Name, app.ApplicationDotHocon.CleanUp.Timer, app.Name), "\n ")
+
+	return &File{
+		Path:    fmt.Sprintf("systemd/%s/daily-cleanup-%s.timer", app.User.Server.Name, app.Name),
 		Content: content,
 	}
 }

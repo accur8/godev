@@ -81,9 +81,22 @@ type User struct {
 type ApplicationDotHocon struct {
 	Install     *InstallDescriptor `json:"install"`
 	Launcher    *Launcher          `json:"launcher"`
+	CleanUp     *CleanUp           `json:"cleanUp"`
 	ListenPort  *int               `json:"listenPort"`
 	DomainNames []string           `json:"domainNames"`
 	CaddyConfig string             `json:"caddyConfig"`
+}
+
+type CleanUp struct {
+	Kind    string         `json:"kind"`
+	Restart bool           `json:"restart"`
+	Timer   string         `json:"timer"`
+	Tasks   []*CleanUpTask `json:"tasks"`
+}
+
+type CleanUpTask struct {
+	Type string            `json:"type"`
+	Args map[string]string `json:"args"`
 }
 
 func ParseDeployInfo(rawArg string) (*DeployInfo, error) {
@@ -321,6 +334,7 @@ func LoadLastDeployJson(appDir string) (*LastDeploy, error) {
 func loadApplicationDotHocon(appDir string) (*ApplicationDotHocon, error) {
 	filePath := filepath.Join(appDir, "application.hocon")
 	config, err := loadHoconFile(filePath)
+
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "error parsing hocon file: %s", filePath)
 	}
@@ -373,6 +387,16 @@ func loadApplicationDotHocon(appDir string) (*ApplicationDotHocon, error) {
 			b := true
 			appDotHocon.Install.WebappExplode = &b
 		}
+	}
+
+	cleanUp := config.GetConfig("cleanUp")
+
+	if cleanUp != nil {
+		appDotHocon.CleanUp = &CleanUp{}
+		appDotHocon.CleanUp.Kind = cleanUp.GetString("kind")
+		appDotHocon.CleanUp.Timer = cleanUp.GetString("timer")
+		appDotHocon.CleanUp.Restart = cleanUp.GetBoolean("restart")
+		// The rest of CleanUp Config is not needed yet in nixgen, to be added later
 	}
 
 	log.Trace("loaded app %v: %v", appDir, appDotHocon.DomainName())
