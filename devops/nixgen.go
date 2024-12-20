@@ -12,8 +12,14 @@ import (
 )
 
 type File struct {
-	Path    string
+	Server  string
+	Module  string
+	Name    string
 	Content string
+}
+
+func (f *File) Path() string {
+	return filepath.Join(f.Server, f.Module, "managed", f.Name)
 }
 
 var supervisorDaemonTemplate = strings.TrimLeft(`
@@ -71,7 +77,7 @@ func NixGen(subCommandArgs *SubCommandArgs) error {
 	}
 	nixgenRoot := filepath.Join(devopsConfig.ProxmoxHostsDir, "nixgen")
 	if a8.DirectoryExists(nixgenRoot) {
-		log.Trace("clearing nixgen root %v", nixgenRoot)
+		log.Trace("clearing managed folders in %v", nixgenRoot)
 		err := os.RemoveAll(nixgenRoot)
 		if err != nil {
 			return err
@@ -81,7 +87,7 @@ func NixGen(subCommandArgs *SubCommandArgs) error {
 	nixFiles := make(map[string][]*File)
 
 	for _, file := range files {
-		path := filepath.Join(nixgenRoot, file.Path)
+		path := filepath.Join(nixgenRoot, file.Path())
 		dir := filepath.Dir(path)
 		if !a8.DirectoryExists(dir) {
 			err := os.MkdirAll(dir, 0755)
@@ -102,7 +108,7 @@ func NixGen(subCommandArgs *SubCommandArgs) error {
 	for dir, files := range nixFiles {
 		lines := []string{}
 		for _, file := range files {
-			base := filepath.Base(file.Path)
+			base := filepath.Base(file.Path())
 			lines = append(lines, fmt.Sprintf("  ./%s", base))
 		}
 		content := fmt.Sprintf(`
@@ -166,7 +172,9 @@ func CaddyConfig(app *App) *File {
 		content = app.ApplicationDotHocon.CaddyConfig
 	}
 	return &File{
-		Path:    fmt.Sprintf("caddy/%s/%s.caddy", app.User.Server.Name, app.Name),
+		Module:  "caddy",
+		Server:  app.User.Server.CaddyServer,
+		Name:    fmt.Sprintf("%s-%s.caddy", app.User.Server.Name, app.Name),
 		Content: content,
 	}
 }
@@ -206,7 +214,9 @@ func SystemdTimerConfig(app *App) (*File, error) {
 		}
 
 		return &File{
-			Path:    fmt.Sprintf("systemd/%s/%s.nix", app.User.Server.Name, app.Name),
+			Module:  "systemd",
+			Server:  app.User.Server.Name,
+			Name:    fmt.Sprintf("%s.nix", app.Name),
 			Content: content,
 		}, nil
 
@@ -264,7 +274,9 @@ func SupervisorConfig(app *App) (*File, error) {
 		}
 
 		return &File{
-			Path:    fmt.Sprintf("supervisor/%s/%s.conf", app.User.Server.Name, app.Name),
+			Module:  "supervisor",
+			Server:  app.User.Server.Name,
+			Name:    fmt.Sprintf("%s.conf", app.Name),
 			Content: content,
 		}, nil
 	} else {

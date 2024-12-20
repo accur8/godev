@@ -47,6 +47,15 @@ var deployCmd = &cobra.Command{
 	},
 }
 
+// deployCmd represents the deploy command
+var nixDeployCmd = &cobra.Command{
+	Use:   "nix-deploy",
+	Short: "Deploys the nixos server(s) passed in",
+	Run: func(cmd *cobra.Command, args []string) {
+		runSubCommand(args, devops.NixDeploy)
+	},
+}
+
 // nixgenCmd represents the deploy command
 var nixgenCmd = &cobra.Command{
 	Use:   "nixgen",
@@ -81,6 +90,7 @@ func main() {
 	rootCmd.AddCommand(localInstallCmd)
 	rootCmd.AddCommand(deployCmd)
 	rootCmd.AddCommand(nixgenCmd)
+	rootCmd.AddCommand(nixDeployCmd)
 
 	// Add the --trace flag to the root command
 	rootCmd.PersistentFlags().BoolVar(&trace, "trace", false, "Enable trace logging")
