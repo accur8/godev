@@ -8,14 +8,58 @@ import (
 
 	"accur8.io/godev/a8"
 	"accur8.io/godev/log"
+	"github.com/palantir/stacktrace"
 )
 
 type File struct {
-	Path    string
+	Server  string
+	Module  string
+	Name    string
 	Content string
 }
 
+func (f *File) Path() string {
+	return filepath.Join(f.Server, f.Module, "managed", f.Name)
+}
+
+var supervisorDaemonTemplate = strings.TrimLeft(`
+[program:{{.AppName}}]
+
+command = {{.Command}}
+
+directory = {{.Directory}}
+
+autostart       = true
+autorestart     = true
+startretries    = 0
+startsecs       = 5
+redirect_stderr = true
+user            = {{.User}}
+`, " \n\t")
+
+var supervisorTimerTemplate = strings.TrimLeft(`
+[program:{{.AppName}}]
+
+command = {{.Command}}
+
+directory = {{.Directory}}
+
+autostart       = false
+autorestart     = false
+startretries    = 0
+startsecs       = 0
+redirect_stderr = true
+user            = {{.User}}
+`, " \n\t")
+
 func NixGen(subCommandArgs *SubCommandArgs) error {
+
+	// log.Trace("trombone titicaca tamborine")
+	// log.Debug("dastardly dudes destroying detroit")
+	// log.Info("in incognito ignomious intelligence")
+	// log.Warn("wet watery whimpering")
+	// log.Error("screaming silently")
+	// os.Exit(1)
 
 	devopsConfig := subCommandArgs.Config
 
@@ -33,15 +77,17 @@ func NixGen(subCommandArgs *SubCommandArgs) error {
 	}
 	nixgenRoot := filepath.Join(devopsConfig.ProxmoxHostsDir, "nixgen")
 	if a8.DirectoryExists(nixgenRoot) {
-		log.Trace("clearing nixgen root %v", nixgenRoot)
+		log.Trace("clearing managed folders in %v", nixgenRoot)
 		err := os.RemoveAll(nixgenRoot)
 		if err != nil {
 			return err
 		}
 	}
 
+	nixFiles := make(map[string][]*File)
+
 	for _, file := range files {
-		path := filepath.Join(nixgenRoot, file.Path)
+		path := filepath.Join(nixgenRoot, file.Path())
 		dir := filepath.Dir(path)
 		if !a8.DirectoryExists(dir) {
 			err := os.MkdirAll(dir, 0755)
@@ -54,21 +100,66 @@ func NixGen(subCommandArgs *SubCommandArgs) error {
 		if err != nil {
 			return err
 		}
+		if strings.HasSuffix(path, ".nix") {
+			nixFiles[dir] = append(nixFiles[dir], file)
+		}
 	}
+
+	for dir, files := range nixFiles {
+		lines := []string{}
+		for _, file := range files {
+			base := filepath.Base(file.Path())
+			lines = append(lines, fmt.Sprintf("  ./%s", base))
+		}
+		content := fmt.Sprintf(`
+{
+	imports = [
+		%s
+	];
+}`, strings.Join(lines, "\n"))
+		path := filepath.Join(dir, "default.nix")
+		err := a8.WriteFile(path, []byte(content))
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 func GenerateContent(app *App) []*File {
 	files := []*File{}
-	if app.ApplicationDotHocon.ListenPort != nil {
-		files = append(files, CaddyConfig(app))
+	{
+		cc := CaddyConfig(app)
+		if cc != nil {
+			files = append(files, cc)
+		}
 	}
+	{
+		svc, err := SupervisorConfig(app)
+		if err != nil {
+			log.Error("failed to generate supervisor config for app %v -- %v", app.Name, err)
+		} else if svc != nil {
+			files = append(files, svc)
+		}
+	}
+<<<<<<< HEAD
 
 	if app.ApplicationDotHocon.CleanUp != nil && app.ApplicationDotHocon.CleanUp.Kind == "systemd" {
 		files = append(files, CleanUpSystemdServiceConfig(app))
 		files = append(files, CleanUpSystemdTimerConfig(app))
 	}
 	files = append(files, SupervisorConfig(app))
+=======
+	{
+		file, err := SystemdTimerConfig(app)
+		if err != nil {
+			log.Error("failed to generate ssytemd timer config for app %v -- %v", app.Name, err)
+		} else if file != nil {
+			files = append(files, file)
+		}
+	}
+>>>>>>> cdf9662 (added support for timers in nixgen)
 	return files
 }
 
@@ -82,7 +173,7 @@ func CaddyConfig(app *App) *File {
 		listenPort := *app.ApplicationDotHocon.ListenPort
 		content = strings.TrimLeft(fmt.Sprintf(`
 %v {
-  encode gzip
+  encode zstd gzip
   reverse_proxy %v:%v
 }		
 		`, virtualHostList, app.User.Server.CaddyName(), listenPort), "\n ")
@@ -90,32 +181,115 @@ func CaddyConfig(app *App) *File {
 		content = app.ApplicationDotHocon.CaddyConfig
 	}
 	return &File{
-		Path:    fmt.Sprintf("caddy/%s/%s.caddy", app.User.Server.Name, app.Name),
+		Module:  "caddy",
+		Server:  app.User.Server.CaddyServer,
+		Name:    fmt.Sprintf("%s-%s.caddy", app.User.Server.Name, app.Name),
 		Content: content,
 	}
 }
 
-func SupervisorConfig(app *App) *File {
+func SystemdTimerConfig(app *App) (*File, error) {
+	if app.ApplicationDotHocon.Launcher.Timer == nil {
+		return nil, nil
+	} else {
+		template := `
+{
+	systemd.timers.{{.AppName}} = {
+		wantedBy = [ "timers.target" ];
+		timerConfig = {
+			OnCalendar = "{{.Timer.OnCalendar}}";
+			OnUnitActiveSec = "{{.Timer.OnUnitActiveSec}}";
+			OnUnitInactiveSec = "{{.Timer.OnUnitInactiveSec}}";
+			OnBootSec = "{{.Timer.OnBootSec}}";
+			Unit = "{{.AppName}}.service";
+		};
+		# persistent = true;
+	};
 
-	content := strings.TrimLeft(fmt.Sprintf(`
-[program:%v]
+	systemd.services.{{.AppName}} = {
+		serviceConfig = {
+			Environment="PATH=/run/current-system/sw/bin";
+			Type = "oneshot";
+			User = "{{.User}}";
+			ExecStart = "supervisorctl start {{.AppName}}";
+		};
+		wantedBy = [ "multi-user.target" ];
+	};
+}		  
+`
+		content, err := RunTemplate(template, app, "systemdTimer")
+		if err != nil {
+			return nil, err
+		}
 
-command = %v
+		return &File{
+			Module:  "systemd",
+			Server:  app.User.Server.Name,
+			Name:    fmt.Sprintf("%s.nix", app.Name),
+			Content: content,
+		}, nil
 
-directory = %v
+	}
+}
 
-autostart       = true
-autorestart     = true
-startretries    = 0
-startsecs       = 5
-redirect_stderr = true
-user            = %v
+func RunTemplate(template string, app *App, templateName string) (string, error) {
 
-	`, app.Name, app.ExecPath(), app.InstallDir(), app.User.Name), "\n ")
+	type Config struct {
+		AppName   string
+		Command   string
+		Directory string
+		User      string
+		Timer     *Timer
+	}
 
-	return &File{
-		Path:    fmt.Sprintf("supervisor/%s/%s.conf", app.User.Server.Name, app.Name),
-		Content: content,
+	generatedContent, err := a8.TemplatedString(
+		&a8.TemplateRequest{
+			Name:    templateName,
+			Content: template,
+			Data: Config{
+				AppName:   app.Name,
+				Command:   app.ExecPath(),
+				Directory: app.InstallDir(),
+				User:      app.User.Name,
+				Timer:     app.ApplicationDotHocon.Launcher.Timer,
+			},
+		},
+	)
+	if err != nil {
+		return "", stacktrace.Propagate(err, "failed to execute %v template", templateName)
+	}
+	return generatedContent, nil
+}
+
+func SupervisorConfig(app *App) (*File, error) {
+
+	if app.ApplicationDotHocon.Launcher.Kind == "supervisor" {
+
+		var templateContent string
+
+		if app.ApplicationDotHocon.Launcher.RawConfig == "" {
+			if app.ApplicationDotHocon.Launcher.Timer == nil {
+				templateContent = supervisorDaemonTemplate
+			} else {
+				templateContent = supervisorTimerTemplate
+			}
+		} else {
+			templateContent = app.ApplicationDotHocon.Launcher.RawConfig
+		}
+
+		content, err := RunTemplate(templateContent, app, "supervisor")
+		if err != nil {
+			return nil, err
+		}
+
+		return &File{
+			Module:  "supervisor",
+			Server:  app.User.Server.Name,
+			Name:    fmt.Sprintf("%s.conf", app.Name),
+			Content: content,
+		}, nil
+	} else {
+		return nil, nil
 	}
 }
 

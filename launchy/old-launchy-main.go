@@ -294,10 +294,6 @@ func RunChildProcess(launchyController LaunchyController) *RunResult {
 	state.ProcessState = launchy_proto.ProcessState_Starting
 	childProcessUid := a8.RandomUid()
 
-	// WARNING:
-	// cmdStdout and cmdStderr either need to be the same Writer or either
-	// of them nil. With two different writers the order of stdout and
-	// stderr writes cannot be preserved.
 	cmdStdout := writer(childProcessUid, launchyController, "stdout", rpc.Transport_Transport_stdout, os.Stdout)
 	cmdStderr := writer(childProcessUid, launchyController, "stderr", rpc.Transport_Transport_stderr, os.Stderr)
 
@@ -346,8 +342,6 @@ func RunChildProcess(launchyController LaunchyController) *RunResult {
 	runResult := &RunResult{
 		ExitCode:    exitCode,
 		ExitMessage: exitMessage,
-		// stdout10k:   stdout.InMemoryRing(),
-		// stderr10k:   stderr.InMemoryRing(),
 	}
 
 	err = launchyController.SubmitChildProcessComplete(runResult)

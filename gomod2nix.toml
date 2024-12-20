@@ -61,6 +61,9 @@ schema = 3
   [mod."github.com/google/uuid"]
     version = "v1.6.0"
     hash = "sha256-VWl9sqUzdOuhW0KzQlv0gwwUQClYkmZwSydHG2sALYw="
+  [mod."github.com/gookit/color"]
+    version = "v1.5.4"
+    hash = "sha256-6Xydefyslup+qohzatAdezGWrS065X5mx18wvRef3Rk="
   [mod."github.com/gorilla/mux"]
     version = "v1.8.1"
     hash = "sha256-nDABvAhlYgxUW2N/brrep7NkQXoSGcHhA+XI4+tK0F0="
@@ -241,6 +244,9 @@ schema = 3
   [mod."github.com/urfave/cli/v2"]
     version = "v2.27.4"
     hash = "sha256-8gkLizRt7U9BfTok/hTysMt78HBP8syiEJ0eYhFrAvo="
+  [mod."github.com/xo/terminfo"]
+    version = "v0.0.0-20210125001918-ca9a967f8778"
+    hash = "sha256-D40lVdmaLlNSKLmeHEXVBoIbdro8w7hnqBCUpzyZ4k4="
   [mod."github.com/xrash/smetrics"]
     version = "v0.0.0-20240521201337-686a1a2994c1"
     hash = "sha256-CsyN59w6sKERDI5kkdpq0YKmqdixyCHuN4FYE/56/BQ="
