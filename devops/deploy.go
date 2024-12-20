@@ -68,6 +68,7 @@ type Server struct {
 	Dir         string
 	Root        *Root
 	NameInCaddy string
+	CaddyServer string
 }
 
 type User struct {
@@ -293,12 +294,28 @@ func DeployApp(state *DeployState, deployInfo *DeployInfo) error {
 
 }
 
+type RunCommandArgs struct {
+	Command    []string
+	WorkingDir string
+}
+
 func RunCommand(args ...string) error {
-	commandStr := strings.Join(args, " ")
-	log.Trace("Running command: %s", commandStr)
-	cmd := exec.Command(args[0], args[1:]...)
+	return RunCommandX(
+		&RunCommandArgs{
+			Command: args,
+		},
+	)
+}
+
+func RunCommandX(args *RunCommandArgs) error {
+	commandStr := strings.Join(args.Command, " ")
+	log.Trace("Running command in %s: %s ", args.WorkingDir, commandStr)
+	cmd := exec.Command(args.Command[0], args.Command[1:]...)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
+	if args.WorkingDir != "" {
+		cmd.Dir = args.WorkingDir
+	}
 	err := cmd.Run()
 	if err != nil {
 		return stacktrace.Propagate(err, "error running command: %s", commandStr)
@@ -485,6 +502,7 @@ func loadServer(dir string, root *Root) (*Server, error) {
 		Dir:         dir,
 		VpnName:     config.GetString("vpnName"),
 		NameInCaddy: config.GetString("nameInCaddy"),
+		CaddyServer: config.GetString("caddyServer"),
 		Root:        root,
 	}
 
