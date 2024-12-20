@@ -269,7 +269,7 @@ func RunCommand(args ...string) error {
 
 func RunCommandX(args *RunCommandArgs) error {
 	commandStr := strings.Join(args.Command, " ")
-	log.Trace("Running command in %s: %s ", args.WorkingDir, commandStr)
+	log.Trace("Running command in %s: %s", args.WorkingDir, commandStr)
 	cmd := exec.Command(args.Command[0], args.Command[1:]...)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
