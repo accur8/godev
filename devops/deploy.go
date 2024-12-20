@@ -88,10 +88,11 @@ type ApplicationDotHocon struct {
 }
 
 type CleanUp struct {
-	Kind    string         `json:"kind"`
-	Restart bool           `json:"restart"`
-	Timer   string         `json:"timer"`
-	Tasks   []*CleanUpTask `json:"tasks"`
+	Kind       string         `json:"kind"`
+	Restart    bool           `json:"restart"`
+	ForceStart bool           `json:"forceStart"`
+	Timer      string         `json:"timer"`
+	Tasks      []*CleanUpTask `json:"tasks"`
 }
 
 type CleanUpTask struct {
@@ -424,6 +425,7 @@ func loadApplicationDotHocon(appDir string) (*ApplicationDotHocon, error) {
 		appDotHocon.CleanUp.Kind = cleanUp.GetString("kind")
 		appDotHocon.CleanUp.Timer = cleanUp.GetString("timer")
 		appDotHocon.CleanUp.Restart = cleanUp.GetBoolean("restart")
+		appDotHocon.CleanUp.ForceStart = cleanUp.GetBoolean("forceStart")
 		// The rest of CleanUp Config is not needed yet in nixgen, to be added later
 	}
 

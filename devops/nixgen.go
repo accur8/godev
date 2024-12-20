@@ -143,23 +143,31 @@ func GenerateContent(app *App) []*File {
 			files = append(files, svc)
 		}
 	}
-<<<<<<< HEAD
+	{
+		log.Warn("Attempting generation!!")
+		cleanUpTimerFile, err := CleanUpSystemdTimerConfig(app)
+		if err != nil {
+			log.Error("failed to generate systemd cleanup timer config for app %v -- %v", app.Name, err)
+		} else if cleanUpTimerFile != nil {
+			files = append(files, cleanUpTimerFile)
+		}
 
-	if app.ApplicationDotHocon.CleanUp != nil && app.ApplicationDotHocon.CleanUp.Kind == "systemd" {
-		files = append(files, CleanUpSystemdServiceConfig(app))
-		files = append(files, CleanUpSystemdTimerConfig(app))
+		cleanUpServiceFile, err := CleanUpSystemdServiceConfig(app)
+		if err != nil {
+			log.Error("failed to generate systemd cleanup service config for app %v -- %v", app.Name, err)
+		} else if cleanUpServiceFile != nil {
+			files = append(files, cleanUpServiceFile)
+		}
 	}
-	files = append(files, SupervisorConfig(app))
-=======
 	{
 		file, err := SystemdTimerConfig(app)
 		if err != nil {
-			log.Error("failed to generate ssytemd timer config for app %v -- %v", app.Name, err)
+			log.Error("failed to generate systemd timer config for app %v -- %v", app.Name, err)
 		} else if file != nil {
 			files = append(files, file)
 		}
 	}
->>>>>>> cdf9662 (added support for timers in nixgen)
+
 	return files
 }
 
@@ -240,6 +248,7 @@ func RunTemplate(template string, app *App, templateName string) (string, error)
 		Directory string
 		User      string
 		Timer     *Timer
+		CleanUp   *CleanUp
 	}
 
 	generatedContent, err := a8.TemplatedString(
@@ -252,6 +261,7 @@ func RunTemplate(template string, app *App, templateName string) (string, error)
 				Directory: app.InstallDir(),
 				User:      app.User.Name,
 				Timer:     app.ApplicationDotHocon.Launcher.Timer,
+				CleanUp:   app.ApplicationDotHocon.CleanUp,
 			},
 		},
 	)
@@ -293,36 +303,66 @@ func SupervisorConfig(app *App) (*File, error) {
 	}
 }
 
-func CleanUpSystemdServiceConfig(app *App) *File {
+func CleanUpSystemdServiceConfig(app *App) (*File, error) {
 
-	content := strings.TrimLeft(fmt.Sprintf(`
-[Unit]
-Description=Executes daily-cleanup-%v script
+	if app.ApplicationDotHocon.CleanUp == nil {
+		return nil, nil
+	}
 
-[Service]
-ExecStart=/run/current-system/sw/bin/daily-cleanup %v/application.hocon
-	`, app.Name, app.InstallDir()), "\n ")
+	template := `
+{
+	systemd.services.{{.AppName}} = {
+		serviceConfig = {
+			Environment="PATH=/run/current-system/sw/bin";
+			Type = "oneshot";
+			User = "{{.User}}";
+			ExecStart = "${nixpkgs.legacyPackages.x86_64-linux.python3}/bin/python ${a8-scripts.packages.x86_64-linux.a8-scripts}/pydevops/daily-cleanup.py";
+		};
+		wantedBy = [ "multi-user.target" ];
+	};
+}		  
+`
+	content, err := RunTemplate(template, app, "systemdTimer")
+	if err != nil {
+		return nil, err
+	}
 
 	return &File{
-		Path:    fmt.Sprintf("systemd/%s/daily-cleanup-%s.service", app.User.Server.Name, app.Name),
+		Module:  "systemd",
+		Server:  app.User.Server.Name,
+		Name:    fmt.Sprintf("%s-cleanup-service.nix", app.Name),
 		Content: content,
-	}
+	}, nil
+
 }
 
-func CleanUpSystemdTimerConfig(app *App) *File {
+func CleanUpSystemdTimerConfig(app *App) (*File, error) {
 
-	content := strings.TrimLeft(fmt.Sprintf(`
-[Unit]
-Description=Timer for daily-cleanup-%v service
+	if app.ApplicationDotHocon.CleanUp == nil {
+		return nil, nil
+	}
 
-[Timer]
-OnCalendar=%v
-Unit=daily-cleanup-%v.service
-
-	`, app.Name, app.ApplicationDotHocon.CleanUp.Timer, app.Name), "\n ")
+	template := `
+{
+	systemd.timers.{{.AppName}} = {
+		wantedBy = [ "timers.target" ];
+		timerConfig = {
+			OnCalendar = "{{.CleanUp.Timer}}";
+			Unit = "daily-cleanup.service";
+		};
+		# persistent = true;
+	};
+}
+`
+	content, err := RunTemplate(template, app, "systemdTimer")
+	if err != nil {
+		return nil, err
+	}
 
 	return &File{
-		Path:    fmt.Sprintf("systemd/%s/daily-cleanup-%s.timer", app.User.Server.Name, app.Name),
+		Module:  "systemd",
+		Server:  app.User.Server.Name,
+		Name:    fmt.Sprintf("%s-cleanup-timer.nix", app.Name),
 		Content: content,
-	}
+	}, nil
 }
