@@ -623,6 +623,8 @@ func resolveRepository(repoPrefix string, repoProperties map[string]string) (*Re
 	repo.ResolvedUrl = resolvedRepoUrl.String()
 	repo.RootUrl = a8.RootUrl(repo.ResolvedUrl)
 
+	log.Debug("Resolved repository %v to %v", repoPrefix, repo.ResolvedUrl)
+
 	return &repo, nil
 }
 
