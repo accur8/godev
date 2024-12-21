@@ -316,7 +316,7 @@ func CleanUpSystemdServiceConfig(app *App) (*File, error) {
 			Environment="PATH=/run/current-system/sw/bin";
 			Type = "oneshot";
 			User = "{{.User}}";
-			ExecStart = "${nixpkgs.legacyPackages.x86_64-linux.python3}/bin/python ${a8-scripts.packages.x86_64-linux.a8-scripts}/pydevops/daily-cleanup.py";
+			ExecStart = "${a8-scripts.packages.x86_64-linux.a8-scripts}/pydevops/daily-cleanup.py";
 		};
 		wantedBy = [ "multi-user.target" ];
 	};
