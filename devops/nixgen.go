@@ -112,9 +112,11 @@ func NixGen(subCommandArgs *SubCommandArgs) error {
 			lines = append(lines, fmt.Sprintf("  ./%s", base))
 		}
 		content := fmt.Sprintf(`
+{ inputs, ... }:
+
 {
 	imports = [
-		%s
+%s
 	];
 }`, strings.Join(lines, "\n"))
 		path := filepath.Join(dir, "default.nix")
@@ -310,13 +312,17 @@ func CleanUpSystemdServiceConfig(app *App) (*File, error) {
 	}
 
 	template := `
-{
+{ inputs, ... }:	
+
+let 
+	a8-scripts = inputs.a8-scripts.packages.x86_64-linux.a8-scripts;
+in {
 	systemd.services.{{.AppName}} = {
 		serviceConfig = {
 			Environment="PATH=/run/current-system/sw/bin";
 			Type = "oneshot";
 			User = "{{.User}}";
-			ExecStart = "${a8-scripts.packages.x86_64-linux.a8-scripts}/pydevops/daily-cleanup.py";
+			ExecStart = "${a8-scripts}/pydevops/daily-cleanup.py";
 		};
 		wantedBy = [ "multi-user.target" ];
 	};
@@ -331,7 +337,7 @@ func CleanUpSystemdServiceConfig(app *App) (*File, error) {
 		Module:  "systemd",
 		Server:  app.User.Server.Name,
 		Name:    fmt.Sprintf("%s-cleanup-service.nix", app.Name),
-		Content: content,
+		Content: strings.TrimSpace(content),
 	}, nil
 
 }
@@ -343,6 +349,7 @@ func CleanUpSystemdTimerConfig(app *App) (*File, error) {
 	}
 
 	template := `
+{ ... }:	
 {
 	systemd.timers.{{.AppName}} = {
 		wantedBy = [ "timers.target" ];
@@ -363,6 +370,6 @@ func CleanUpSystemdTimerConfig(app *App) (*File, error) {
 		Module:  "systemd",
 		Server:  app.User.Server.Name,
 		Name:    fmt.Sprintf("%s-cleanup-timer.nix", app.Name),
-		Content: content,
+		Content: strings.TrimSpace(content),
 	}, nil
 }
