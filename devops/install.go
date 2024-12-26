@@ -244,7 +244,7 @@ func InstallJavaProcess(state *InstallerState) error {
 		return err
 	}
 
-	err = createNixGcroot()
+	err = createNixGcroot(state)
 	if err != nil {
 		return err
 	}
