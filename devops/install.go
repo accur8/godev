@@ -8,7 +8,9 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
+	"strings"
 
 	"accur8.io/godev/a8"
 	"accur8.io/godev/log"
@@ -242,6 +244,11 @@ func InstallJavaProcess(state *InstallerState) error {
 		return err
 	}
 
+	err = createNixGcroot()
+	if err != nil {
+		return err
+	}
+
 	err = setupInstallDir(state)
 	if err != nil {
 		return err
@@ -261,6 +268,45 @@ func InstallJavaProcess(state *InstallerState) error {
 	log.Debug("Installation completed successfully")
 
 	return nil
+
+}
+
+func createNixGcroot(state *InstallerState) error {
+
+	userS, err := user.Current()
+	if err != nil {
+		return err
+	}
+
+	gcrootDir := filepath.Join("/nix/var/nix/gcroots/per-user", userS.Username)
+
+	if a8.DirectoryExists(gcrootDir) {
+
+		nixBuildDir := filepath.Join(state.Directories.InstallDir, "nix/build")
+
+		gcRootLinkName := strings.ReplaceAll(nixBuildDir, "-", "--")
+		gcRootLinkName = strings.ReplaceAll(gcRootLinkName, "/", "-")
+		gcrootLink := filepath.Join(gcrootDir, gcRootLinkName)
+
+		log.Debug("Creating/Updating gcroot link %v -> %v", gcrootLink, nixBuildDir)
+
+		if a8.FileExists(gcrootLink) {
+			err := os.Remove(gcrootLink)
+			if err != nil {
+				return err
+			}
+		}
+
+		err = os.Symlink(nixBuildDir, gcrootLink)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	} else {
+		log.Warn("GCROOT directory %v does not exist, no gcroot created", gcrootDir)
+		return nil
+	}
 
 }
 
